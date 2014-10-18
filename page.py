@@ -12,32 +12,50 @@ class Page(object):
     media_extensions = ['mp3']
     text_extensions = ['doc']
 
-
     def __init__(root_url, uid):
         self.root_url = root_url
         self.uid = uid
         self.emails = {}
-        self.crawled_links_set = Set()
+        self.crawled_links_set = set()
 
     def crawl_root(depth=1):
         crawl_node(self.root_url, depth)
 
     def crawl_node(entry_node_link, depth=1):
-        #starts crawling from the entry_node_link, goes up to depth 1. Doesn't revisit ones we've seen.
-        if depth == 0:
-            extract_new_links
+        '''
+        Starts crawling from the entry_node_link, goes down to depth 1.
+        Doesn't revisit ones we've seen.
+        '''
+        extract_info(entry_node_link)
+        if depth != 0:
+            for neighboring_link in extract_new_target_links(entry_node_link):
+                crawl_node(neighboring_link, node-1)
 
-        crawl_node(entry_node_link, depth-1)
+    def extract_info(link):
+        '''
+        Extracts the relevant info from the link.
+        Updates the instance vars.
+        '''
 
+        pass
 
-    def extract_new_links(page):
+    def extract_new_target_links(link):
         '''
         Extracts all new links from the page.
         Won't return links visited before.
+        Only returns links that pass the rules to visit.
         '''
-        #page =
+        target_links = set()
+        raw_html = getRawHtml(link)
+        bs_struct = BeautifulSoup(raw_html, "html.parser")
+        for potential_link in bs_struct.find_all('a', href=True):
+            link_href = potential_link['href']
+            if (link_href not in crawled_links_set) and should_visit(link_href):
+                target_links.add(potential_link['href'])
+                crawled_links_set.add(target_links)
+        return target_links
 
-    def link_worth_visit(link):
+    def should_visit(link):
         '''
         Returns true if we're going to visit the link.
         '''
@@ -59,8 +77,8 @@ class Page(object):
     #################
     ###### Exit #####
     #################
-   def output():
-       #output the university set.
-       pass
+    def output():
+        #output the university set.
+        pass
 
 
