@@ -20,18 +20,19 @@ csv_out = csv.writer(open("universities.csv", "a"))
 csv_out.writerow(["UNIVERSITY", "URL", "STATE"])
 #csv_out.writerow(["Name","Address","Telephone","Fax","E-mail","Others"])
 
-for university_box in box2.find_all('box2', href=True):
-    for institution in university_box.find_all('li'):
-        state = institution.text.encode('utf-8')
-        for link in institution.find_all('a', href=True):
-            if link.has_attr('href'):
-                url = link['href'].encode('utf-8')
-                university = link.text.encode('utf-8')
-                state = state.replace(university, "")
-                #print url
-                #print university
-                #print state
-                csv_out.writerow([university, url, state])
+for university_box in bs_struct.find_all('div', {"class": "box2l"}):
+    for ul_box in university_box.find_all('ul'):
+        for institution in ul_box.find_all('li'):
+            state = institution.text.encode('utf-8')
+            for link in institution.find_all('a', href=True):
+                if link.has_attr('href'):
+                    url = link['href'].encode('utf-8')
+                    university = link.text.encode('utf-8')
+                    state = state.replace(university, "")
+                    #print url
+                    #print university
+                    #print state
+                    csv_out.writerow([university, url, state])
 
 
 
