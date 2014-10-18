@@ -22,6 +22,6 @@ if __name__ == '__main__':
                 keywords = " ".join(university_entry, department, search_key)
                 search_result = google_search(keywords, 4)
                 for result_link in search_result:
-                    page.crawl_root(result_link, 1)
+                    page.crawl_node(result_link, 1)
         page.output()
 
