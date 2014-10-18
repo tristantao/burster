@@ -12,27 +12,25 @@ def getRawHtml(raw_link):
     raw_html = r.text
     return raw_html
 
-
-
 raw_html = getRawHtml("http://www.utexas.edu/world/univ/alpha/")
 bs_struct = BeautifulSoup(raw_html, "html.parser")
 csv_out = csv.writer(open("universities.csv", "a"))
 csv_out.writerow(["UNIVERSITY", "URL", "STATE"])
 #csv_out.writerow(["Name","Address","Telephone","Fax","E-mail","Others"])
 
-for university_box in bs_struct.find_all('div', {"class": "box2l"}):
-    for ul_box in university_box.find_all('ul'):
-        for institution in ul_box.find_all('li'):
-            state = institution.text.encode('utf-8')
-            for link in institution.find_all('a', href=True):
-                if link.has_attr('href'):
-                    url = link['href'].encode('utf-8')
-                    university = link.text.encode('utf-8')
-                    state = state.replace(university, "")
-                    #print url
-                    #print university
-                    #print state
-                    csv_out.writerow([university, url, state])
+#for university_box in bs_struct.find_all('div', {"class": "box2l"}):
+
+for institution in bs_struct.find_all('li'):
+    state = institution.text.encode('utf-8')
+    links = institution.find_all('a', href=True)
+    link = links[0]
+    url = link['href'].encode('utf-8')
+    university = link.text.encode('utf-8')
+    state = state.replace(university, "")
+    #print url
+    #print university
+    #print state
+    csv_out.writerow([university, url, state])
 
 
 
