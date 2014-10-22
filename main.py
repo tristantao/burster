@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 import requests
 from datetime import date
 
-#from page_crawler import *
+from page_crawler import *
 #from scraper_util import *
 
 from page import *
@@ -14,9 +14,8 @@ if __name__ == '__main__':
     departments = ['statistics', 'mathematics', 'computer science']
     search_keys = ['department faculty', 'career', '']
 
-
     for university_entry in universities:
-        university_page = Page("university_entry")
+        page = Page(university_entry)
         for department in departments:
             for search_key in search_keys:
                 keywords = " ".join(university_entry, department, search_key)
