@@ -25,18 +25,18 @@ def google_search(keywords, first_n):
 
 def bing_search(keywords, bing_id, first_n=50):
     #does a Bing search given a keyword
-    bing = BingSearch(bin_id)
+    print "[STATUS] BingSearching {0}".format(keywords)
+    bing = BingSearch(bing_id)
     return bing.search(keywords, limit=first_n, format='json')
 
-
-def name_from_email(email, school, first_n=3):
+def name_from_email(email, school, bing_id, first_n=3):
     local_part = email.lower().split("@")[0]
     search_word = "professor. " + email + ' ' + school
-    g = pygoogle(search_word)
-    g.pages = first_n
-    res = g.search()
+    bing = BingSearch(bing_id)
+    ressult_list = bing.search(email + " " + school, limit=50, format='json')
     pdb.set_trace()
-    for (title, link) in res.iteritems():
+    for result in ressult_list:
+        title, link = result.title, result.url
         tokenized_names = title.lower().split()
         n_gram = ""
         for token in tokenized_names:
