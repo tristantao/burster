@@ -1,11 +1,10 @@
+import re
+import sets
+import urlparse
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 
 from scraper_util import *
-
-import re
-import sets
-import urlparse
 import pdb
 
 class Page(object):
@@ -31,7 +30,11 @@ class Page(object):
         Starts crawling from the entry_node_link, goes down to depth 1.
         Doesn't revisit ones we've seen.
         '''
-        link_html = getRawHtml(entry_node_link)
+        try:
+            link_html = getRawHtml(entry_node_link)
+        except PageError as e:
+            print e.msg
+            return
         self.extract_info(link_html)
         if depth != 0:
             for neighboring_link in self.extract_new_target_links(link_html):
@@ -53,8 +56,7 @@ class Page(object):
         '''
         for email in self.get_emails(link_html):
             self.emails.add(email)
-        pdb.set_trace()
-        pass
+        #pdb.set_trace()
 
     def extract_new_target_links(self, link_html):
         '''

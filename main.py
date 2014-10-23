@@ -1,26 +1,35 @@
+#standard imports
 import sys
 import time, csv, optparse
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 from datetime import date
 
-from page_crawler import *
-#from scraper_util import *
+import pdb
 
-from page import *
+#util imports
+import db_util
+import search_util
+import page
+import keys
 
 if __name__ == '__main__':
-    universities = 'university.csv'
-    departments = ['statistics', 'mathematics', 'computer science']
-    search_keys = ['department faculty', 'career', '']
+    universities = db_util.get_university_from_db()
 
-    for university_entry in universities:
-        page = Page(university_entry)
+    departments = ['statistics', 'mathematics', 'computer science']
+    search_keys = ['department faculty', 'career']
+
+    for university_name, university_url in universities.iteritems():
+        page = page.Page(university_url, university_name)
         for department in departments:
             for search_key in search_keys:
-                keywords = " ".join(university_entry, department, search_key)
-                search_result = google_search(keywords, 4)
-                for result_link in search_result:
-                    page.crawl_node(result_link, 1)
+                keywords = " ".join([university_name, department, search_key])
+                search_results, search_next_link = search_util.bing_search(keywords, keys.bing_id, first_n=5)
+                for result_object in search_results:
+                    page.crawl_node(result_object.url, 1)
+        pdb.set_trace()
         page.output()
+        #break
+
+
 
