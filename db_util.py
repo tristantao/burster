@@ -18,7 +18,7 @@ def connect_db():
     cur = conn.cursor()
     return conn, cur
 
-def load_university():
+def load_university_csv():
     conn, cur = connect_db()
 
     with open('universities.csv', 'rb') as f:
@@ -65,7 +65,7 @@ def iter_university():
     pass
 
 if __name__ == "__main__":
-    load_university()
+    load_university_csv()
 
 
 
