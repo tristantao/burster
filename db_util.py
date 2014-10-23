@@ -61,12 +61,26 @@ def get_university_from_db():
     cur.close()
     return university_dict
 
-def iter_university():
-    pass
+def insert_professor(university_id, professor_name, professor_email, professor_department=None):
+    '''
+    Insert a professor.
+    '''
+    conn, cur = connect_db()
+    query = """INSERT INTO %s (email, name, department, university_id, date_added, last_contacted)
+                       VALUES (%%s, %%s, %%s, %%s, %%s, %%s)" % "professor"""
+    args_tuple = (professor_email, professor_name, professor_department, university_id, "now()", None)
+    try:
+        cur.execute(query, args_tuple)
+        conn.commit()
+    except psycopg2.IntegrityError as pIE:
+        print "Duplicate: " + str(pIE)
+        return false
+    return true
+
+
 
 if __name__ == "__main__":
     load_university_csv()
-
 
 
 #some notes:
