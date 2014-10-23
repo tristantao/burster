@@ -2,11 +2,10 @@ import psycopg2
 import sys
 import csv
 
+## void connect_db
+## void load_university()
+## {} get_university_from_db
 
-# void connect_db
-# void load_university()
-# {} get_university_from_db
-#
 
 def connect_db():
     try:
