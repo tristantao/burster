@@ -30,6 +30,7 @@ if __name__ == '__main__':
                 keywords = " ".join([university_name, department, search_key])
                 print "[INFO] Searching: %s" % keywords
                 search_results, search_next_link = search_util.bing_search(keywords, keys.bing_id, first_n=5)
+                db_util.update_university_last_scraped(university_id)
                 for result_object in search_results:
                     crawl_pages.crawl_node(result_object.url, 0) #currently scrape depth 0, only surface
                     professor_list = crawl_pages.output_professors()

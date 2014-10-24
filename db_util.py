@@ -14,15 +14,20 @@ def connect_db():
         conn_string = "host='localhost' dbname='burster_data'"
         conn = psycopg2.connect(conn_string)
         conn.autocommit = True
+        print "[INFO] Connected to DB."
     except:
         print "Cannot connect to db"
         raise
     cur = conn.cursor()
     return conn, cur
 
+def close_db(conn, cur):
+    cur.close()
+    conn.close()
+    print "[INFO] Disconnected db."
+
 def load_university_csv():
     conn, cur = connect_db()
-
     with open('universities.csv', 'rb') as f:
         reader = csv.reader(f)
         header = reader.next()
@@ -40,16 +45,15 @@ def load_university_csv():
             except psycopg2.DataError as pDE:
                 print "Error: " + str(pIE)
                 continue
-
-    cur.close()
-    conn.close
+    close_db(conn, cur)
 
 def get_university_from_db():
     '''
     Returns unviersities in a list of University instances.
+    Ordered in last scraped date.
     '''
     conn, cur = connect_db()
-    query = "select id, name, region, url from university"
+    query = "SELECT id, name, region, url FROM university ORDER BY last_scraped DESC"
     university_list = []
     try:
         cur.execute(query)
@@ -58,9 +62,23 @@ def get_university_from_db():
     except psycopg2.Error as pE:
         print str(pE)
         raise
-    conn.close()
-    cur.close()
+    close_db(conn, cur)
     return university_list
+
+def update_university_last_scraped(university_id):
+    '''
+    update the university.last_scraped as now() for university_id
+    '''
+    conn, cur = connect_db()
+    query = """UPDATE %s SET last_scraped = now() WHERE id = '%%s' """ % "university"
+    arg_id = university_id
+    try:
+        cur.execute(query, arg_id)
+        conn.commit()
+    except Exception as e:
+        print str(e)
+    close_db(conn, cur)
+
 
 def insert_professors(professor_list):
     '''
@@ -82,11 +100,13 @@ def insert_professors(professor_list):
         except psycopg2.IntegrityError as pIE:
             print "Duplicate: " + str(pIE)
             continue
+    close_db(conn, cur)
     return True
 
 
 if __name__ == "__main__":
-    load_university_csv()
+    pass
+    #load_university_csv()
 
 
 #some notes:
