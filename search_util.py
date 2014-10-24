@@ -28,7 +28,11 @@ def bing_search(keywords, bing_id, first_n=50, throttle=True):
     print "[STATUS] BingSearching {0}".format(keywords)
     if throttle:
         time.sleep(random.random())
-    bing = BingSearch(bing_id)
+    try:
+        bing = BingSearch(bing_id)
+    except Exception as e:
+        print str(e)
+        return []
     return bing.search(keywords, limit=first_n, format='json')
 
 def name_from_email(email, school, bing_id, first_n=3):
@@ -47,6 +51,7 @@ def name_from_email(email, school, bing_id, first_n=3):
                 return token
                 #return n_gram
     return None
+
 
 #name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University")
 #name_from_email("dcline@stat.tamu.edu", "")
