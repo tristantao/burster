@@ -1,6 +1,8 @@
 import psycopg2
 import sys
 import csv
+import professor
+import university
 
 ## void connect_db
 ## void load_university()
@@ -44,39 +46,43 @@ def load_university_csv():
 
 def get_university_from_db():
     '''
-    Returns unviersities in a dict format:
-    name as key, and url as val.
+    Returns unviersities in a list of University instances.
     '''
     conn, cur = connect_db()
-    query = "select name, url from university"
-    university_dict = {}
+    query = "select id, name, region, url from university"
+    university_list = []
     try:
         cur.execute(query)
         for row in cur:
-            university_dict[row[0]] = row[1]
+            university_list.append(university.University(row[0], row[1], row[2], row[3]))
     except psycopg2.Error as pE:
         print str(pE)
         raise
     conn.close()
     cur.close()
-    return university_dict
+    return university_list
 
-def insert_professor(university_id, professor_name, professor_email, professor_department=None):
+def insert_professors(professor_list):
     '''
     Insert a professor.
+    @input list of professors
     '''
     conn, cur = connect_db()
-    query = """INSERT INTO %s (email, name, department, university_id, date_added, last_contacted)
-                       VALUES (%%s, %%s, %%s, %%s, %%s, %%s)" % "professor"""
-    args_tuple = (professor_email, professor_name, professor_department, university_id, "now()", None)
-    try:
-        cur.execute(query, args_tuple)
-        conn.commit()
-    except psycopg2.IntegrityError as pIE:
-        print "Duplicate: " + str(pIE)
-        return false
-    return true
+    for professor in professor_list:
+        university_id = professor.university_id
+        professor_name = professor.name
+        professor_email = professor.email
+        professor_department = professor.department
+        args_tuple = (str(professor_email), professor_name, professor_department, university_id, "now()", None)
 
+        query = """INSERT INTO %s (email, name, department, university_id, date_added, last_contacted) VALUES (%%s, %%s, %%s, %%s, %%s, %%s)""" % "professor"
+        try:
+            cur.execute(query, args_tuple)
+            conn.commit()
+        except psycopg2.IntegrityError as pIE:
+            print "Duplicate: " + str(pIE)
+            continue
+    return true
 
 
 if __name__ == "__main__":
@@ -103,9 +109,9 @@ INSERT INTO films (code, title, did, date_prod, kind) VALUES
 
 CREATE TABLE IF NOT EXISTS professor (
    id serial NOT NULL primary key,
-   email varchar (25) UNIQUE NOT NULL,
-   name varchar(25) default NULL,
-   department varchar (25) default NULL,
+   email varchar (100) UNIQUE NOT NULL,
+   name varchar(100) default NULL,
+   department varchar (100) default NULL,
    university_id int NOT NULL,
    FOREIGN KEY(university_id) REFERENCES university(id),
    date_added timestamp default NULL
