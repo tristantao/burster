@@ -52,7 +52,7 @@ class Page(object):
         '''
         # Removing lines that start with '//' because the regular expression
         # mistakenly matches patterns like 'http://foo@bar.com' as '//foo@bar.com'.
-        return (email[0] for email in re.findall(self.email_regex, s) if not email[0].startswith('//'))
+        return ([email[0] for email in re.findall(self.email_regex, s) if not email[0].startswith('//')])
 
     def extract_info(self, link_html):
         '''
