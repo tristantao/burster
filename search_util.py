@@ -1,5 +1,5 @@
 import sys
-import time, csv, optparse
+import time, csv, optparse, random
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 from datetime import date
@@ -23,9 +23,11 @@ def google_search(keywords, first_n):
     result_links = g.get_urls()
     return result_links[:first_n]
 
-def bing_search(keywords, bing_id, first_n=50):
+def bing_search(keywords, bing_id, first_n=50, throttle=True):
     #does a Bing search given a keyword
     print "[STATUS] BingSearching {0}".format(keywords)
+    if throttle:
+        time.sleep(random.random())
     bing = BingSearch(bing_id)
     return bing.search(keywords, limit=first_n, format='json')
 
