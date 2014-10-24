@@ -13,8 +13,11 @@ import pdb
 
 class Page(object):
 
-    media_extensions = ['mp3', 'jpg', 'png']
-    text_extensions = ['doc', 'pdf']
+    media_extensions = ['mp3', 'm4a', 'wav', 'wma', 'mov', 'wmv', 'mpg', 'mp4', 'flv',
+     'avi', 'jpg', 'png', 'dot', 'ppt', 'pps', 'pptx', 'exe', 'jar', 'app', 'ico']
+    archive_extensions = ['dmg', 'iso', 'rar', 'zip', 'tar.gz', 'tar']
+    text_extensions = ['doc', 'pdf', 'odt']
+
     email_regex = re.compile(("([a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`"
                               "{|}~-]+)*(@|\sat\s)(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(\.|"
                               "\sdot\s))+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)"))
@@ -34,6 +37,8 @@ class Page(object):
         Starts crawling from the entry_node_link, goes down to depth 1.
         Doesn't revisit ones we've seen.
         '''
+        if not self.should_visit(entry_node_link):
+            return
         try:
             link_html = getRawHtml(entry_node_link)
         except PageError as e:
@@ -85,7 +90,8 @@ class Page(object):
         '''
         Returns true if we're going to visit the link.
         '''
-        return not (self.is_media_link(link) or self.is_text_link(link) or self.is_email_link(link))
+        return not ( self.is_media_link(link) or self.is_text_link(link) or
+                     self.is_email_link(link) or self.is_archive_link(link) )
 
     def is_media_link(self, link):
         return self.has_extension(self.media_extensions, link)
@@ -95,6 +101,9 @@ class Page(object):
 
     def is_email_link(self, link):
         return ("@" in link)
+
+    def is_archive_link(self, link):
+        return self.has_extension(self.archive_extensions, link)
 
     def has_extension(self, taboo_list, link):
         resource = link.replace(self.root_url, "")
