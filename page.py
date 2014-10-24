@@ -1,10 +1,14 @@
 import re
+import time
+import random
 import sets
 import urlparse
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 
 from scraper_util import *
+import professor
+
 import pdb
 
 class Page(object):
@@ -15,9 +19,9 @@ class Page(object):
                               "{|}~-]+)*(@|\sat\s)(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(\.|"
                               "\sdot\s))+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)"))
 
-    def __init__(self, root_url, uid):
+    def __init__(self, root_url, university_id):
         self.root_url = root_url
-        self.uid = uid
+        self.university_id = university_id
         self.emails = set()
         self.crawled_links_set = set()
 
@@ -38,6 +42,7 @@ class Page(object):
         self.extract_info(link_html)
         if depth != 0:
             for neighboring_link in self.extract_new_target_links(link_html):
+                time.sleep(random.random()/5)
                 self.crawl_node(neighboring_link, depth=depth-1)
 
     def get_emails(self, s):
@@ -71,7 +76,7 @@ class Page(object):
             link_href = potential_link['href']
             if self.root_url not in link_href:
                 link_href = urlparse.urljoin(self.root_url, link_href)
-            if (link_href not in self.crawled_links_set) and self.should_visit(link_href):
+            if (link_href not in self.crawled_links_set) and self.should_visit(link_href) and link_href not in self.emails:
                 target_links.add(link_href)
                 self.crawled_links_set.add(link_href)
         return target_links
@@ -80,13 +85,16 @@ class Page(object):
         '''
         Returns true if we're going to visit the link.
         '''
-        return not (self.is_media_link(link) or self.is_text_link(link))
+        return not (self.is_media_link(link) or self.is_text_link(link) or self.is_email_link(link))
 
     def is_media_link(self, link):
         return self.has_extension(self.media_extensions, link)
 
     def is_text_link(self, link):
         return self.has_extension(self.text_extensions, link)
+
+    def is_email_link(self, link):
+        return ("@" in link)
 
     def has_extension(self, taboo_list, link):
         resource = link.replace(self.root_url, "")
@@ -98,8 +106,20 @@ class Page(object):
     #################
     ###### Exit #####
     #################
-    def output(self):
-        #output the university set.
-        print self.emails
+    def output_professors(self):
+        #output the list of
+        professor_list = []
+        for professor_email in self.emails:
+            p = professor.Professor(None, professor_email, self.university_id, None)
+            professor_list.append(p)
+        return professor_list
+
+
+
+
+
+
+
+
 
 
