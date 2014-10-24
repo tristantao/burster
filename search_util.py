@@ -46,7 +46,6 @@ def name_from_email(email, school, bing_id, first_n=3):
                 #return n_gram
     return None
 
-
 #name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University")
 #name_from_email("dcline@stat.tamu.edu", "")
 
