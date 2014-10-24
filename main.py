@@ -26,6 +26,7 @@ if __name__ == '__main__':
 
         crawl_pages = page.Page(university_url, university_id)
         for department in departments:
+            crawl_pages.current_department = department
             for search_key in search_keys:
                 keywords = " ".join([university_name, department, search_key])
                 print "[INFO] Searching: %s" % keywords

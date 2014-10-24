@@ -18,6 +18,8 @@ class Page(object):
     archive_extensions = ['dmg', 'iso', 'rar', 'zip', 'tar.gz', 'tar']
     text_extensions = ['doc', 'pdf', 'odt']
 
+    current_department = ''
+
     email_regex = re.compile(("([a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`"
                               "{|}~-]+)*(@|\sat\s)(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(\.|"
                               "\sdot\s))+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)"))
@@ -25,7 +27,7 @@ class Page(object):
     def __init__(self, root_url, university_id):
         self.root_url = root_url
         self.university_id = university_id
-        self.emails = set()
+        self.emails = {} # {email:department} #set()
         self.crawled_links_set = set()
 
     def crawl_root(self, depth=1):
@@ -65,7 +67,8 @@ class Page(object):
         Updates the instance vars.
         '''
         for email in self.get_emails(link_html):
-            self.emails.add(email)
+            self.emails[email] = self.current_department
+            #self.emails.add(email)
         #pdb.set_trace()
 
     def extract_new_target_links(self, link_html):
@@ -118,8 +121,8 @@ class Page(object):
     def output_professors(self):
         #output the list of
         professor_list = []
-        for professor_email in self.emails:
-            p = professor.Professor(None, professor_email, self.university_id, None)
+        for professor_email, professor_department in self.emails.iteritems():
+            p = professor.Professor(None, professor_email, self.university_id, professor_department)
             professor_list.append(p)
         return professor_list
 
