@@ -9,6 +9,9 @@ import psycopg2.extras
 ## void load_university()
 ## {} get_university_from_db
 
+##################
+#### Utility #####
+##################
 
 def connect_db():
     try:
@@ -27,6 +30,10 @@ def close_db(conn, cur):
     cur.close()
     conn.close()
     print "[INFO] Disconnected db."
+
+##################
+### University ###
+##################
 
 def load_university_csv():
     conn, cur = connect_db()
@@ -81,6 +88,10 @@ def update_university_last_scraped(university_id):
         print str(e)
     close_db(conn, cur)
 
+##################
+### Professors ###
+##################
+
 def insert_professors(professor_list):
     '''
     Insert a professor.
@@ -103,6 +114,13 @@ def insert_professors(professor_list):
             continue
     close_db(conn, cur)
     return True
+
+def fix_emails():
+    '''
+    Fix emails to email-able form.
+    Removes "mailto" or [at] etc.
+    '''
+    pass
 
 
 if __name__ == "__main__":
