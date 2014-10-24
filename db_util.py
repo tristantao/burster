@@ -72,15 +72,14 @@ def update_university_last_scraped(university_id):
     update the university.last_scraped as now() for university_id
     '''
     conn, cur = connect_db()
-    query = """UPDATE %s SET last_scraped = now() WHERE id = '%%s' """ % "university"
-    arg_id = university_id
+    query = "UPDATE %s SET last_scraped = now() WHERE id = '%%s' " % "university"
+    arg_id = [university_id]
     try:
         cur.execute(query, arg_id)
         conn.commit()
     except Exception as e:
         print str(e)
     close_db(conn, cur)
-
 
 def insert_professors(professor_list):
     '''
