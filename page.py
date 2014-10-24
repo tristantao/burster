@@ -14,7 +14,7 @@ import pdb
 class Page(object):
 
     media_extensions = ['mp3', 'jpg', 'png']
-    text_extensions = ['doc']
+    text_extensions = ['doc', 'pdf']
     email_regex = re.compile(("([a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`"
                               "{|}~-]+)*(@|\sat\s)(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(\.|"
                               "\sdot\s))+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)"))
