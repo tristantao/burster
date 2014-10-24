@@ -1,8 +1,9 @@
-import psycopg2
 import sys
 import csv
 import professor
 import university
+import psycopg2
+import psycopg2.extras
 
 ## void connect_db
 ## void load_university()
@@ -15,10 +16,11 @@ def connect_db():
         conn = psycopg2.connect(conn_string)
         conn.autocommit = True
         print "[INFO] Connected to DB."
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        print "[INFO] Cursor Created."
     except:
         print "Cannot connect to db"
         raise
-    cur = conn.cursor()
     return conn, cur
 
 def close_db(conn, cur):
