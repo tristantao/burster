@@ -82,7 +82,7 @@ def insert_professors(professor_list):
         except psycopg2.IntegrityError as pIE:
             print "Duplicate: " + str(pIE)
             continue
-    return true
+    return True
 
 
 if __name__ == "__main__":
