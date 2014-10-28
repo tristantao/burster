@@ -4,7 +4,7 @@ burster
 
 Dependencies:
 
-pygoogle
-bingsearch
+//pygoogle
+pybingsearch
 psycopg2
 BeautifulSoup
