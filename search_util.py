@@ -9,7 +9,8 @@ from scraper_util import *
 
 from pygoogle import pygoogle
 #from pybing import Bing
-from bingsearch import BingSearch
+import pybingsearch
+from pybingsearch import PyBingSearch
 
 import math
 import pdb
@@ -25,20 +26,21 @@ def google_search(keywords, first_n):
 
 def bing_search(keywords, bing_id, first_n=50, throttle=True):
     #does a Bing search given a keyword
-    print "[STATUS] BingSearching {0}".format(keywords)
+    print "[STATUS] PyBingSearching {0}".format(keywords)
     if throttle:
         time.sleep(random.random())
     try:
-        bing = BingSearch(bing_id)
-    except Exception as e:
-        print str(e)
-        return []
-    return bing.search(keywords, limit=first_n, format='json')
+        bing = PyBingSearch(bing_id)
+        search_result, next_link = bing.search(keywords, limit=first_n, format='json')
+    except pybingsearch.PyBingException as pBE:
+        print str(pBE)
+        sys.exit(1)
+    return search_result, next_link
 
 def name_from_email(email, school, bing_id, first_n=3):
     local_part = email.lower().split("@")[0]
     search_word = "professor. " + email + ' ' + school
-    bing = BingSearch(bing_id)
+    bing = PyBingSearch(bing_id)
     ressult_list = bing.search(email + " " + school, limit=50, format='json')
     pdb.set_trace()
     for result in ressult_list:
