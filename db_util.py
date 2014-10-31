@@ -15,7 +15,7 @@ import psycopg2.extras
 
 def connect_db():
     try:
-        conn_string = "host='localhost' dbname='burster_data'"
+        conn_string = "dbname='burster_data'"
         conn = psycopg2.connect(conn_string)
         conn.autocommit = True
         print "[INFO] Connected to DB."
