@@ -115,16 +115,47 @@ def insert_professors(professor_list):
     close_db(conn, cur)
     return True
 
-def fix_emails():
+def fix_emails(table_name, email_col_name):
     '''
     Fix emails to email-able form.
     Removes "mailto" or [at] etc.
     '''
-    pass
+    conn, cur = connect_db()
+    conn2, cur2 = connect_db()
+    conn3, cur3 = connect_db()
+    query = """ SELECT * FROM %s """
+    cur.execute(query % table_name)
+    for row in cur:
+        try:
+            print row
+            professor_id = row['id']
+            professor_email = row['email']
+            updated = False
+            if "/" in professor_email or "'" in professor_email or "mailto" in professor_email:
+                professor_email = professor_email.replace("/", "").replace("mailto", "").replace("'", "")
+                updated = True
+            if "=" in professor_email:
+                professor_email = professor_email.split("=")[-1]
+                updated = True
+            if " at " in professor_email:
+                professor_email = professor_email.replace(" at ", "@")
+                updated = True
+            if updated:
+                 cur2.execute("""UPDATE %s SET %s = '%s' WHERE id = %s """ % (table_name, email_col_name, professor_email, professor_id))
+        except psycopg2.IntegrityError as pIE:
+            print str(pIE)
+            cur3.execute("""DELETE FROM professor WHERE id = %s """ % (table_name, professor_id))
+            continue
+        except psycopg2.Error as pE:
+            print str(pE)
+            raise
+    close_db(conn, cur)
+    close_db(conn2, cur2)
+    close_db(conn3, cur3)
 
 
 if __name__ == "__main__":
-    pass
+    fix_emails('professor', 'email')
     #load_university_csv()
 
 
