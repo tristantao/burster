@@ -144,7 +144,7 @@ def fix_emails(table_name, email_col_name):
                  cur2.execute("""UPDATE %s SET %s = '%s' WHERE id = %s """ % (table_name, email_col_name, professor_email, professor_id))
         except psycopg2.IntegrityError as pIE:
             print str(pIE)
-            cur3.execute("""DELETE FROM professor WHERE id = %s """ % (table_name, professor_id))
+            cur3.execute("""DELETE FROM %s WHERE id = %s """ % (table_name, professor_id))
             continue
         except psycopg2.Error as pE:
             print str(pE)
