@@ -1,6 +1,6 @@
 import sys
 import csv
-import professor
+from professor import *
 import university
 import psycopg2
 import psycopg2.extras
@@ -115,14 +115,44 @@ def insert_professors(professor_list):
     close_db(conn, cur)
     return True
 
-def extract_professor_from_university(university, n):
+def extract_unemailed_professors_from_university(university_name, n):
     '''
-    Returns n professors from a specific university.
+    Returns n professors from a specific . Only grabs professors we haven't emailed before.
     Tries to return a list of length 0 ~ n depending on professsor count.
+    Updates email_transaction assuming that we email the professors.
     '''
-    professor_list = []
+
     conn, cur = connect_db()
-    return professor_list
+    conn2, cur2 = connect_db()
+    try:
+        cur.execute(""" SELECT id FROM university WHERE name = '%s' """ % university_name)
+        university_id = cur.fetchone()[0]
+    except TypeError as tE:
+            print str(tE)
+            raise
+
+    try:
+        query = """ WITH emailed_professors AS (SELECT DISTINCT professor_id FROM %s)
+            SELECT * from %s WHERE university_id = %%s AND id NOT in (SELECT professor_id FROM emailed_professors)""" \
+            % ("email_transaction", "professor")
+        args_tuple = (university_id,)
+        cur2.execute(query, args_tuple)
+
+        potential_professors = []
+        for professor in cur2: #name, email, university_id, department):9
+            print professor
+            potential_professors.append(Professor(professor['name'], professor['email'],
+                                                  professor['university_id'], professor['department']))
+        print len(potential_professors)
+        print potential_professors[0].name
+        print potential_professors[1].name
+    except psycopg2.Error as pE:
+            print str(pE)
+            raise
+
+    close_db(conn, cur)
+    close_db(conn2, cur2)
+    return potential_professors
 
 
 def fix_emails(table_name, email_col_name):
@@ -165,9 +195,8 @@ def fix_emails(table_name, email_col_name):
 
 
 ##################
-### Emails ###
+##### Emails #####
 ##################
-
 def add_email_transaction(professor_list, email_type, time = None):
     '''
     Updates the email transaction db, assuming we sent emails to the given professors witht the custom email_type
@@ -194,12 +223,10 @@ def add_email_transaction(professor_list, email_type, time = None):
     close_db(conn, cur)
     close_db(conn2, cur2)
 
-
-
 if __name__ == "__main__":
-    add_email_transaction([professor.Professor('a', 'cade.white@jmc.acu.edu', 'a', 'a'),
-        professor.Professor('b', 'hlfoster@uaa.alaska.edu', 'b', 'b')], "test_email")
-
+    add_email_transaction([Professor('a', 'cade.white@jmc.acu.edu', 'a', 'a'),
+        Professor('b', 'hlfoster@uaa.alaska.edu', 'b', 'b')], "test_email")
+    extract_unemailed_professors_from_university("American Business & Technology University",100)
     pass
     #fix_emails('professor', 'email')
     #load_university_csv()
