@@ -115,6 +115,43 @@ def insert_professors(professor_list):
     close_db(conn, cur)
     return True
 
+def extract_professor_from_university(university, n):
+    '''
+    Returns n professors from a specific university.
+    Tries to return a list of length 0 ~ n depending on professsor count.
+    '''
+    professor_list = []
+    conn, cur = connect_db()
+    return professor_list
+
+
+def add_email_transaction(professor_list, email_type, time = None):
+    '''
+    Updates the email transaction db, assuming we sent emails to the given professors witht the custom email_type
+    '''
+    conn, cur = connect_db()
+    conn2, cur2 = connect_db()
+    #id | date | professor_id | email_type
+    if (time == None):
+        time = "now()"
+    query = """INSERT INTO %s (date, professor_id, email_type) VALUES (%%s, %%s, %%s) """ % "email_transaction"
+
+    for professor in professor_list:
+        try:
+            cur2.execute(""" SELECT id from professor where email = '%s' """ % professor.email)
+            professor_id = cur2.fetchone()[0]
+            args_tuple = (time, professor_id, email_type)
+            cur.execute(query, args_tuple)
+        except TypeError as tE:
+            print str(tE)
+            continue
+        except psycopg2.Error as pE:
+            print str(pE)
+            raise
+    close_db(conn, cur)
+    close_db(conn2, cur2)
+
+
 def fix_emails(table_name, email_col_name):
     '''
     Fix emails to email-able form.
@@ -155,7 +192,8 @@ def fix_emails(table_name, email_col_name):
 
 
 if __name__ == "__main__":
-    fix_emails('professor', 'email')
+    pass
+    #fix_emails('professor', 'email')
     #load_university_csv()
 
 
@@ -186,6 +224,17 @@ CREATE TABLE IF NOT EXISTS professor (
    FOREIGN KEY(university_id) REFERENCES university(id),
    date_added timestamp default NULL
 );
+
+
+CREATE TABLE IF NOT EXISTS email_transaction (
+    id seriaL NOT NULL primary key,
+    date timestamp NOT NULL,
+    professor_id int NOT NULL,
+    FOREIGN KEY(professor_id) REFERENCES professor(id),
+    email_type varchar(20) NOT NULL
+);
+
+
 
 ALTER TABLE professor
     add COLUMN last_contacted timestamp default NULL;
