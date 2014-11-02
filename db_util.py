@@ -125,33 +125,6 @@ def extract_professor_from_university(university, n):
     return professor_list
 
 
-def add_email_transaction(professor_list, email_type, time = None):
-    '''
-    Updates the email transaction db, assuming we sent emails to the given professors witht the custom email_type
-    '''
-    conn, cur = connect_db()
-    conn2, cur2 = connect_db()
-    #id | date | professor_id | email_type
-    if (time == None):
-        time = "now()"
-    query = """INSERT INTO %s (date, professor_id, email_type) VALUES (%%s, %%s, %%s) """ % "email_transaction"
-
-    for professor in professor_list:
-        try:
-            cur2.execute(""" SELECT id from professor where email = '%s' """ % professor.email)
-            professor_id = cur2.fetchone()[0]
-            args_tuple = (time, professor_id, email_type)
-            cur.execute(query, args_tuple)
-        except TypeError as tE:
-            print str(tE)
-            continue
-        except psycopg2.Error as pE:
-            print str(pE)
-            raise
-    close_db(conn, cur)
-    close_db(conn2, cur2)
-
-
 def fix_emails(table_name, email_col_name):
     '''
     Fix emails to email-able form.
@@ -189,6 +162,38 @@ def fix_emails(table_name, email_col_name):
     close_db(conn, cur)
     close_db(conn2, cur2)
     close_db(conn3, cur3)
+
+
+##################
+### Emails ###
+##################
+
+def add_email_transaction(professor_list, email_type, time = None):
+    '''
+    Updates the email transaction db, assuming we sent emails to the given professors witht the custom email_type
+    '''
+    conn, cur = connect_db()
+    conn2, cur2 = connect_db()
+    #id | date | professor_id | email_type
+    if (time == None):
+        time = "now()"
+    query = """INSERT INTO %s (date, professor_id, email_type) VALUES (%%s, %%s, %%s) """ % "email_transaction"
+
+    for professor in professor_list:
+        try:
+            cur2.execute(""" SELECT id from professor where email = '%s' """ % professor.email)
+            professor_id = cur2.fetchone()[0]
+            args_tuple = (time, professor_id, email_type)
+            cur.execute(query, args_tuple)
+        except TypeError as tE:
+            print str(tE)
+            continue
+        except psycopg2.Error as pE:
+            print str(pE)
+            raise
+    close_db(conn, cur)
+    close_db(conn2, cur2)
+
 
 
 if __name__ == "__main__":
