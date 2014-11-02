@@ -192,6 +192,9 @@ def fix_emails(table_name, email_col_name):
 
 
 if __name__ == "__main__":
+    add_email_transaction([professor.Professor('a', 'cade.white@jmc.acu.edu', 'a', 'a'),
+        professor.Professor('b', 'hlfoster@uaa.alaska.edu', 'b', 'b')], "test_email")
+
     pass
     #fix_emails('professor', 'email')
     #load_university_csv()
