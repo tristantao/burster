@@ -8,19 +8,17 @@ class Professor(object):
         self.department = department
         self.id = None
 
-
-
     def should_contact(self):
         #returns true if we're going to contact the Professor
         if not self.email:
             return False
-        if Professor.bad_name_failure(self.email) or Professor.long_name_failure(self.email)
-        or Professor.non_alpha_subdomain_failure(self.email), Professor.subdomain_length_failure(self.email)
-        or Professor.name_equal_domain_failure(self.email) or Professor.unfamilar_domain_failure(self.email)
+        if Professor.bad_name_failure(self.email) or Professor.long_name_failure(self.email) \
+        or Professor.non_alpha_subdomain_failure(self.email) or Professor.subdomain_length_failure(self.email) \
+        or Professor.name_equal_domain_failure(self.email) or Professor.unfamilar_domain_failure(self.email):
             return False
         return True
 
-        @staticmethod
+    @staticmethod
     def unfamilar_domain_failure(sub_domain):
         good_domains = [".org", ".edu", ".com"]
         sub_domain = "".join(sub_domain.split("@")[1:]) if "@" in sub_domain else sub_domain
@@ -28,7 +26,6 @@ class Professor(object):
             if domain in sub_domain:
                 return False
         return True
-
 
     @staticmethod
     def name_equal_domain_failure(email):
@@ -45,7 +42,7 @@ class Professor(object):
     def non_alpha_subdomain_failure(sub_domain):
         sub_domain = "".join(sub_domain.split("@")[1:]) if "@" in sub_domain else sub_domain
         num_alpha = float(sum(1 for char in sub_domain if char.isalpha()))
-        return (num_alpha / len(sub_domain) < 0.5)
+        return (num_alpha / len(sub_domain) < 0.51)
 
     @staticmethod
     def long_name_failure(name):
@@ -63,3 +60,7 @@ class Professor(object):
              if taboo_contains in name:
                  return True
          return False if name not in name_words_exact else True
+
+if __name__ == "__main__":
+    test_professor = Professor('name', 'student@legit.com', 'university_id', 'departmen')
+    print test_professor.should_contact()
