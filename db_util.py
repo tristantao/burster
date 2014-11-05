@@ -176,8 +176,6 @@ def extract_unemailed_professors_from_university(university_name, n):
             potential_professors.append(Professor(professor['name'], professor['email'],
                                                   professor['university_id'], professor['department']))
         print len(potential_professors)
-        print potential_professors[0].name
-        print potential_professors[1].name
     except psycopg2.Error as pE:
             print str(pE)
             raise
