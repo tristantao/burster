@@ -8,9 +8,9 @@ import re
 from scraper_util import *
 
 from pygoogle import pygoogle
-#from pybing import Bing
-import pybingsearch
 from pybingsearch import PyBingSearch
+
+import keys
 
 import math
 import pdb
@@ -41,8 +41,8 @@ def name_from_email(email, school, bing_id, first_n=3):
     local_part = email.lower().split("@")[0]
     search_word = "professor. " + email + ' ' + school
     bing = PyBingSearch(bing_id)
-    ressult_list = bing.search(email + " " + school, limit=50, format='json')
-    pdb.set_trace()
+    ressult_list, next_page = bing.search(search_word, limit=50, format='json') #email + " " + school
+    #pdb.set_trace()
     for result in ressult_list:
         title, link = result.title, result.url
         tokenized_names = title.lower().split()
@@ -50,12 +50,13 @@ def name_from_email(email, school, bing_id, first_n=3):
         for token in tokenized_names:
             n_gram += (token + " ")
             if token in local_part:
-                return token
+                return token.title()
                 #return n_gram
     return None
 
 
-#name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University")
+name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
+
 #name_from_email("dcline@stat.tamu.edu", "")
 
 
