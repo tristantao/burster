@@ -37,9 +37,10 @@ def bing_search(keywords, bing_id, first_n=50, throttle=True):
         sys.exit(1)
     return search_result, next_link
 
-def name_from_email(email, school, bing_id, first_n=3):
+def name_from_email(email, school_name, bing_id, first_n=3):
+    #Grabs the professor's name from bing. Need to better leverage the resulting html.
     local_part = email.lower().split("@")[0]
-    search_word = "professor. " + email + ' ' + school
+    search_word = "professor. " + email + ' ' + school_name
     bing = PyBingSearch(bing_id)
     ressult_list, next_page = bing.search(search_word, limit=50, format='json') #email + " " + school
     #pdb.set_trace()
