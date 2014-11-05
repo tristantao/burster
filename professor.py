@@ -62,5 +62,5 @@ class Professor(object):
          return False if name not in name_words_exact else True
 
 if __name__ == "__main__":
-    test_professor = Professor('name', 'student@legit.com', 'university_id', 'departmen')
+    test_professor = Professor('name', 'student@legit.com', 'university_id', 'department')
     print test_professor.should_contact()

@@ -53,7 +53,7 @@ def name_from_email(email, school_name, bing_id, first_n=3):
         tokenized_names = re.findall(r"\w+", title.lower())
         n_gram = ""
         for token in tokenized_names:
-            if len(token) < 2:
+            if len(token) < 3:
                 continue
             n_gram += (token + " ")
             if token in local_part:

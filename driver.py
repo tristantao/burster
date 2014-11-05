@@ -19,7 +19,6 @@ import keys
 #print page.emails
 #pdb.set_trace()
 
-
 if __name__ == "__main__":
     csv_out = csv.writer(open("data/professors.csv", "a"))
     csv_out.writerow(["FIRST NAME", "EMAIL", "UNIVERSITY"])
@@ -37,7 +36,7 @@ if __name__ == "__main__":
                 professor_name = search_util.name_from_email(professor.email, university_name, keys.bing_id)
                 professor.name = professor_name
                 db_util.update_name(professor)
-                csv_out.writerow([professor_name, professor.email, university_name])
+                csv_out.writerow([professor_name, professor.email, university_name, professor.should_contact()])
             db_util.add_email_transaction(target_professors, "200.csv")
 
             #extract_unemailed_professors_from_university
