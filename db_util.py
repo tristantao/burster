@@ -36,7 +36,7 @@ def connect_db():
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         print "[INFO] Cursor Created."
     except:
-        print "Cannot connect to db"
+        print "[ERR] Cannot connect to db"
         raise
     return conn, cur
 
@@ -156,6 +156,7 @@ def extract_unemailed_professors_from_university(university_name, n):
 
     conn, cur = connect_db()
     conn2, cur2 = connect_db()
+    university_name = university_name.replace("'", "''")
     try:
         cur.execute(""" SELECT id FROM university WHERE name = '%s' """ % university_name)
         university_id = cur.fetchone()[0]
@@ -172,10 +173,10 @@ def extract_unemailed_professors_from_university(university_name, n):
 
         potential_professors = []
         for professor in cur2: #name, email, university_id, department):9
-            print professor
+            #print professor
             potential_professors.append(Professor(professor['name'], professor['email'],
                                                   professor['university_id'], professor['department']))
-        print len(potential_professors)
+        print "[INFO] Extracted %s potential unemailed professor(s) from %s" % (len(potential_professors), university_name)
     except psycopg2.Error as pE:
             print str(pE)
             raise
