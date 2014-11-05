@@ -39,24 +39,30 @@ def bing_search(keywords, bing_id, first_n=50, throttle=True):
 
 def name_from_email(email, school_name, bing_id, first_n=3):
     #Grabs the professor's name from bing. Need to better leverage the resulting html.
-    local_part = email.lower().split("@")[0]
+    try:
+        local_part = email.lower().split("@")[0]
+    except IndexError as iE:
+        print email
+        return None
     search_word = "professor. " + email + ' ' + school_name
     bing = PyBingSearch(bing_id)
     ressult_list, next_page = bing.search(search_word, limit=50, format='json') #email + " " + school
-    #pdb.set_trace()
     for result in ressult_list:
         title, link = result.title, result.url
-        tokenized_names = title.lower().split()
+        #tokenized_names = title.lower().split()
+        tokenized_names = re.findall(r"\w+", title.lower())
         n_gram = ""
         for token in tokenized_names:
+            if len(token) < 2:
+                continue
             n_gram += (token + " ")
             if token in local_part:
                 return token.title()
-                #return n_gram
     return None
 
 
-name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
+#name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
+print name_from_email("rmclaughlin@walsh.edu", "Walsh University", bing_id=keys.bing_id)
 
 #name_from_email("dcline@stat.tamu.edu", "")
 
