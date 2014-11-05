@@ -4,10 +4,24 @@ from professor import *
 import university
 import psycopg2
 import psycopg2.extras
+from random import shuffle
 
+### util
 ## void connect_db
 ## void load_university()
+
+### university
 ## {} get_university_from_db
+## void update_university_last_scraped()
+
+### professor
+## void insert_professors(list<Professor>)
+## list<professor> extract_unemailed_professors_from_university
+## void fix_emails
+## void update_professor_name(Professor())
+
+### email
+## add_email_transaction
 
 ##################
 #### Utility #####
@@ -92,6 +106,24 @@ def update_university_last_scraped(university_id):
 ### Professors ###
 ##################
 
+def update_name(professor):
+    #return true if it works, false otherwis
+    conn, cur = connect_db()
+    if (professor.id == None) and (professor.email != None):
+         query = "UPDATE professor SET name = %%s WHERE email = '%s' " % professor.email
+    else:
+         query = "UPDATE professor SET name = %%s WHERE id = %s " % professor.id
+    arg_tuple = (professor.name,)
+    try:
+        cur.execute(query, arg_tuple)
+        conn.commit
+    except Exception as e:
+        return False
+        print str(e)
+    close_db(conn, cur)
+    return True
+
+
 def insert_professors(professor_list):
     '''
     Insert a professor.
@@ -152,7 +184,9 @@ def extract_unemailed_professors_from_university(university_name, n):
 
     close_db(conn, cur)
     close_db(conn2, cur2)
-    return potential_professors
+
+    shuffle(potential_professors)
+    return potential_professors[0:n]
 
 
 def fix_emails(table_name, email_col_name):
@@ -224,9 +258,10 @@ def add_email_transaction(professor_list, email_type, time = None):
     close_db(conn2, cur2)
 
 if __name__ == "__main__":
-    add_email_transaction([Professor('a', 'cade.white@jmc.acu.edu', 'a', 'a'),
-        Professor('b', 'hlfoster@uaa.alaska.edu', 'b', 'b')], "test_email")
-    extract_unemailed_professors_from_university("American Business & Technology University",100)
+    #add_email_transaction([Professor('a', 'cade.white@jmc.acu.edu', 'a', 'a'),
+    #    Professor('b', 'hlfoster@uaa.alaska.edu', 'b', 'b')], "test_email")
+    #extract_unemailed_professors_from_university("American Business & Technology University", 100)
+    update_name(Professor('foster', 'hlfoster@uaa.alaska.edu', 'b', 'b'))
     pass
     #fix_emails('professor', 'email')
     #load_university_csv()
