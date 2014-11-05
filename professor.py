@@ -6,4 +6,5 @@ class Professor(object):
         self.email = email
         self.university_id = university_id
         self.department = department
+        self.id = None
 

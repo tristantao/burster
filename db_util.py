@@ -1,13 +1,27 @@
 import sys
 import csv
-import professor
+from professor import *
 import university
 import psycopg2
 import psycopg2.extras
+from random import shuffle
 
+### util
 ## void connect_db
 ## void load_university()
+
+### university
 ## {} get_university_from_db
+## void update_university_last_scraped()
+
+### professor
+## void insert_professors(list<Professor>)
+## list<professor> extract_unemailed_professors_from_university
+## void fix_emails
+## void update_professor_name(Professor())
+
+### email
+## add_email_transaction
 
 ##################
 #### Utility #####
@@ -92,6 +106,24 @@ def update_university_last_scraped(university_id):
 ### Professors ###
 ##################
 
+def update_name(professor):
+    #return true if it works, false otherwis
+    conn, cur = connect_db()
+    if (professor.id == None) and (professor.email != None):
+         query = "UPDATE professor SET name = %%s WHERE email = '%s' " % professor.email
+    else:
+         query = "UPDATE professor SET name = %%s WHERE id = %s " % professor.id
+    arg_tuple = (professor.name,)
+    try:
+        cur.execute(query, arg_tuple)
+        conn.commit
+    except Exception as e:
+        return False
+        print str(e)
+    close_db(conn, cur)
+    return True
+
+
 def insert_professors(professor_list):
     '''
     Insert a professor.
@@ -114,6 +146,48 @@ def insert_professors(professor_list):
             continue
     close_db(conn, cur)
     return True
+
+def extract_unemailed_professors_from_university(university_name, n):
+    '''
+    Returns n professors from a specific university. Only grabs professors we haven't emailed before (for now).
+    Tries to return a list of length 0 ~ n depending on professsor count.
+    Updates email_transaction assuming that we email the professors.
+    '''
+
+    conn, cur = connect_db()
+    conn2, cur2 = connect_db()
+    try:
+        cur.execute(""" SELECT id FROM university WHERE name = '%s' """ % university_name)
+        university_id = cur.fetchone()[0]
+    except TypeError as tE:
+            print str(tE)
+            raise
+
+    try:
+        query = """ WITH emailed_professors AS (SELECT DISTINCT professor_id FROM %s)
+            SELECT * from %s WHERE university_id = %%s AND id NOT in (SELECT professor_id FROM emailed_professors)""" \
+            % ("email_transaction", "professor")
+        args_tuple = (university_id,)
+        cur2.execute(query, args_tuple)
+
+        potential_professors = []
+        for professor in cur2: #name, email, university_id, department):9
+            print professor
+            potential_professors.append(Professor(professor['name'], professor['email'],
+                                                  professor['university_id'], professor['department']))
+        print len(potential_professors)
+        print potential_professors[0].name
+        print potential_professors[1].name
+    except psycopg2.Error as pE:
+            print str(pE)
+            raise
+
+    close_db(conn, cur)
+    close_db(conn2, cur2)
+
+    shuffle(potential_professors)
+    return potential_professors[0:n]
+
 
 def fix_emails(table_name, email_col_name):
     '''
@@ -154,8 +228,42 @@ def fix_emails(table_name, email_col_name):
     close_db(conn3, cur3)
 
 
+##################
+##### Emails #####
+##################
+def add_email_transaction(professor_list, email_type, time = None):
+    '''
+    Updates the email transaction db, assuming we sent emails to the given professors witht the custom email_type
+    '''
+    conn, cur = connect_db()
+    conn2, cur2 = connect_db()
+    #id | date | professor_id | email_type
+    if (time == None):
+        time = "now()"
+    query = """INSERT INTO %s (date, professor_id, email_type) VALUES (%%s, %%s, %%s) """ % "email_transaction"
+
+    for professor in professor_list:
+        try:
+            cur2.execute(""" SELECT id from professor where email = '%s' """ % professor.email)
+            professor_id = cur2.fetchone()[0]
+            args_tuple = (time, professor_id, email_type)
+            cur.execute(query, args_tuple)
+        except TypeError as tE:
+            print str(tE)
+            continue
+        except psycopg2.Error as pE:
+            print str(pE)
+            raise
+    close_db(conn, cur)
+    close_db(conn2, cur2)
+
 if __name__ == "__main__":
-    fix_emails('professor', 'email')
+    #add_email_transaction([Professor('a', 'cade.white@jmc.acu.edu', 'a', 'a'),
+    #    Professor('b', 'hlfoster@uaa.alaska.edu', 'b', 'b')], "test_email")
+    #extract_unemailed_professors_from_university("American Business & Technology University", 100)
+    update_name(Professor('foster', 'hlfoster@uaa.alaska.edu', 'b', 'b'))
+    pass
+    #fix_emails('professor', 'email')
     #load_university_csv()
 
 
@@ -186,6 +294,17 @@ CREATE TABLE IF NOT EXISTS professor (
    FOREIGN KEY(university_id) REFERENCES university(id),
    date_added timestamp default NULL
 );
+
+
+CREATE TABLE IF NOT EXISTS email_transaction (
+    id seriaL NOT NULL primary key,
+    date timestamp NOT NULL,
+    professor_id int NOT NULL,
+    FOREIGN KEY(professor_id) REFERENCES professor(id),
+    email_type varchar(20) NOT NULL
+);
+
+
 
 ALTER TABLE professor
     add COLUMN last_contacted timestamp default NULL;
