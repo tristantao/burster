@@ -117,7 +117,7 @@ def insert_professors(professor_list):
 
 def extract_unemailed_professors_from_university(university_name, n):
     '''
-    Returns n professors from a specific . Only grabs professors we haven't emailed before.
+    Returns n professors from a specific university. Only grabs professors we haven't emailed before (for now).
     Tries to return a list of length 0 ~ n depending on professsor count.
     Updates email_transaction assuming that we email the professors.
     '''
