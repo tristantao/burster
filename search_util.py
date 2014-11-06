@@ -42,11 +42,11 @@ def bing_search(keywords, bing_id, first_n=50, throttle=True):
         sys.exit(1)
     return search_result, next_link
 
-def web_searh(search_word):
+def web_searh(search_word, limit=10):
     #Retrusna a list of Result objects
     #the actual search function caled by other functions.
     bing = PyBingSearch(keys.bing_id)
-    result_list, next_page = bing.search(search_word, limit=10, format='json') #email + " " + school
+    result_list, next_page = bing.search(search_word, limit, format='json') #email + " " + school
     return result_list
 
 class IterableElementToken:
@@ -101,9 +101,6 @@ def page_name_extraction(page, email):
             if len(tokenized_encoded_element) != 0 and all([encoded_element_token[0].isupper() for encoded_element_token in tokenized_encoded_element]):
                 tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) for t in tokenized_encoded_element]
                 candidates[tuple(tokenized_encoded_element)] = min(tokenized_encoded_element_scores)
-                #print tokenized_encoded_element + tokenized_encoded_element_scores
-            #if encoded_element[0].isupper(): #only check upper
-                #print search_element.encode('ascii','ignore')
     try:
         extracted_name_token = sorted(candidates.iteritems(), key=lambda k: k[1])[0]
         return extracted_name_token
@@ -121,14 +118,16 @@ def name_from_email(email, school_name, first_n=3):
     result_list = web_searh(search_word, limit=10)
 
     #first pass
+    source_level_extraction_results = []
     for result_index, result in enumerate(result_list):
         if result_index < 4:
-            print page_name_extraction(result.url, email)
+            source_level_extraction_results.append(page_name_extraction(result.url, email))
         else:
             break
         continue
 
     #2nd pass
+    result_page_tokenization_search_result = ""
     for result_index, result in enumerate(result_list):
         title, link = result.title, result.url
         #tokenized_names = title.lower().split()
@@ -139,14 +138,16 @@ def name_from_email(email, school_name, first_n=3):
                 continue
             n_gram += (token + " ")
             if token in local_part:
-                return token.title()
+                result_page_tokenization_search_result = token.title()
+    print source_level_extraction_results
+    print result_page_tokenization_search_result
     return None
 
 
 #page_name_extraction(page, email)
 
 #name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
-name_from_email("massellol@walshjesuit.org", "Walsh University", bing_id=keys.bing_id)
+name_from_email("massellol@walshjesuit.org", "Walsh University")
 #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
 
 

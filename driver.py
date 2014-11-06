@@ -12,7 +12,6 @@ import keys
 #print result_list[0].url
 #print result_list[0].title
 
-
 #page = Page("https://www.stat.tamu.edu/people/", "texas")
 #page.crawl_root(depth=1)
 
