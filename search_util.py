@@ -87,7 +87,7 @@ def page_name_extraction(page, email):
     raw_html = getRawHtml(page)
     name = email.split("@")[0] if "@" in email else email #@TODO check if including the @ makes the search better (or try both)
     name = sorted(re.split('\.|\_|\-', name), key=lambda c: len(c), reverse=True)[0]
-    #@TODO take care when it is [at] or [dot].
+    #@TODO take care when it is [at] or [dot]. Currently ignoring it by not looking for '@'.
 
     try:
         bs_struct = BeautifulSoup(raw_html, "html.parser")
@@ -96,16 +96,24 @@ def page_name_extraction(page, email):
         return None
     name_regex = r'' + re.escape(name)
     candidates = {}
-    for elem in bs_struct(text=re.compile(name_regex)):
+    if len(bs_struct(text=re.compile(name_regex))) != 0:
+        elem = bs_struct(text=re.compile(name_regex))[0]
         elem =  elem.parent
         element_prev_iterable_token = IterableElementToken(elem, "previous")
         element_next_iterable_token = IterableElementToken(elem, "next")
 
         for index, search_element in enumerate(roundrobin(element_prev_iterable_token, element_next_iterable_token)):
-            tokenized_encoded_element = word_tokenize(search_element.encode('utf8'))
-            if len(tokenized_encoded_element) != 0 and all([encoded_element_token[0].isupper() for encoded_element_token in tokenized_encoded_element]):
-                tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) for t in tokenized_encoded_element]
-                candidates[tuple(tokenized_encoded_element)] = min(tokenized_encoded_element_scores)
+            try:
+                tokenized_encoded_element = word_tokenize(search_element.encode('utf8'))
+                if len(tokenized_encoded_element) != 0 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 2) for encoded_element_token in tokenized_encoded_element]):
+                    tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) + (index / 10.0) for t in tokenized_encoded_element]
+                    candidates[tuple(tokenized_encoded_element)] = min(tokenized_encoded_element_scores)
+                    print "%s  : %s" % (tuple(tokenized_encoded_element), tokenized_encoded_element_scores)
+            except RuntimeError as rE:
+                #encode sometimes gets into an infinite recursion for some reason.
+                continue
+                print str(rE)
+                return ''
     try:
         extracted_name_token = sorted(candidates.iteritems(), key=lambda k: k[1])[0]
         return extracted_name_token
@@ -120,7 +128,8 @@ def name_from_email(email, school_name, first_n=3):
     except IndexError as iE:
         print "[ERROR] Bad email: %s" % email
         return None
-    search_word = " " + email + ' ' + school_name
+    #search_word = " " + email + " " + school_name
+    search_word = email
     result_list = web_searh(search_word, limit=10)
 
     #first pass uses html source
@@ -136,6 +145,7 @@ def name_from_email(email, school_name, first_n=3):
         source_level_extraction_results = sorted(source_level_extraction_results, key=lambda (x,y): y)
     except TypeError as tE:
         print "WARN: could not complete full sort due to bad extractions"
+        source_level_extraction_results = []
 
     #2nd pass uses title matching
     result_page_tokenization_search_result = ""
@@ -163,7 +173,8 @@ def name_from_email(email, school_name, first_n=3):
 
     if len(source_level_extraction_results) != 0:
         try:
-            print " ".join(source_level_extraction_results[0][0]) + "************************************"
+            print "************************************ SRC level extrated for %s:" % email
+            print " ".join(source_level_extraction_results[0][0])
             return " ".join(source_level_extraction_results[0][0])
         except Exception as e:
             print "[ERR] Failed to extract %s. Printing source_level_extraction_results below" + email
@@ -188,7 +199,7 @@ def name_from_email(email, school_name, first_n=3):
 #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
 #name_from_email("sattar@bard.edu", "Bard College")
 
-name_from_email("swcarter@ncsu.edu", "Thomas University")
+name_from_email("skiff@bard.edu", "Bard College")
 #print page_name_extraction('http://www.gradschool.usciences.edu/faculty/walasek-carl', 'c.walase@usciences.edu')
 
 
