@@ -19,7 +19,7 @@ import keys
 #pdb.set_trace()
 
 if __name__ == "__main__":
-    csv_out = csv.writer(open("data/professors.csv", "a"))
+    csv_out = csv.writer(open("data/professors_nov_6.csv", "a"))
     csv_out.writerow(["FIRST NAME", "EMAIL", "UNIVERSITY"])
 
     with open('data/200.csv', 'rb') as f:
@@ -31,6 +31,9 @@ if __name__ == "__main__":
             target_professors = db_util.extract_unemailed_professors_from_university(university_name, 2)
             print len(target_professors)
             for professor in target_professors:
+                if not professor.should_contact:
+                    print "[INFO] Skipping Professor: %s" % professor.email
+                    continue
                 professor_name = search_util.name_from_email(professor.email, university_name)
                 professor.name = professor_name
                 db_util.update_name(professor)
