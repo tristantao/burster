@@ -83,7 +83,7 @@ def roundrobin(*iterables):
             nexts = cycle(islice(nexts, pending))
 
 class NameScoreBox:
-    #when updating, only keeps the lowest score.
+    # when updating, only keeps the lowest score.
 
     def __init__(self):
         self.name_scores = {}
@@ -94,10 +94,23 @@ class NameScoreBox:
     def get_score(self, name):
         return self.name_scores.get(name, sys.maxint)
 
-    def best_name(self):
+    def best_name_score(self):
+        # Returns the best guess and score tuple (name, score)
         try:
             return sorted(self.name_scores.iteritems(), key=lambda k: k[1])[0]
         except IndexError as iE:
+            return None
+        except AttributeError as aE:
+            return None
+
+    def best_name(self):
+        # Returns the best name guess.
+        try:
+            return sorted(self.name_scores.iteritems(), key=lambda k: k[1])[0][0].strip()
+            #return sorted(self.name_scores.iteritems(), key=lambda k: k[1])[0]
+        except IndexError as iE:
+            return None
+        except AttributeError as aE:
             return None
 
 def score_token(name, token, bias=0.0):
@@ -114,6 +127,7 @@ def simplify_name(extracted_name, email):
     if not name:
         return None
     name_modules = re.split('[^a-zA-z\s\.]', extracted_name)
+    print name_modules
     name_module_to_score = NameScoreBox()
 
     for tokenized_name_parts in name_modules:
@@ -165,7 +179,7 @@ def page_name_extraction(page, email):
                 continue
     else:
         print "[INFO] Email Name '%s' NOT found in page '%s'. Continuing." % (email, page)
-    return score_box.best_name()
+    return score_box.best_name_score()
 
 def name_from_email(email, school_name, first_n=3):
     # Grabs the professor's name from bing. Need to better leverage the resulting html.
@@ -176,8 +190,7 @@ def name_from_email(email, school_name, first_n=3):
         print "[ERROR] Bad email: %s" % email
         return None
     #search_word = " " + email + " " + school_name
-    search_word = email
-    result_list = web_searh(search_word, limit=10)
+    result_list = web_searh(email, limit=10)
 
     #first pass uses html source
     source_level_extraction_results = []
@@ -246,6 +259,7 @@ if __name__ == "__main__":
     #name_from_email("sattar@bard.edu", "Bard College")
     #name_from_email("pmerrill@wingate.edu", "Wingate University")
     n = name_from_email("agalatola@wcupa.edu", "")
+    print n
     print simplify_name(n, "agalatola@wcupa.edu")
     #ccuff@westminster.edu
     #lavori@stanford.edu
