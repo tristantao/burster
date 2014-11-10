@@ -7,6 +7,7 @@ import re
 from itertools import islice, cycle
 from nltk.tokenize import word_tokenize
 import nltk
+import HTMLParser
 
 from scraper_util import *
 
@@ -88,7 +89,11 @@ def page_name_extraction(page, email):
     name = sorted(re.split('\.|\_|\-', name), key=lambda c: len(c), reverse=True)[0]
     #@TODO take care when it is [at] or [dot].
 
-    bs_struct = BeautifulSoup(raw_html, "html.parser")
+    try:
+        bs_struct = BeautifulSoup(raw_html, "html.parser")
+    except HTMLParser.HTMLParseError as hPE:
+        print str(hPE)
+        return None
     name_regex = r'' + re.escape(name)
     candidates = {}
     for elem in bs_struct(text=re.compile(name_regex)):
@@ -108,25 +113,31 @@ def page_name_extraction(page, email):
         return None
 
 def name_from_email(email, school_name, first_n=3):
-    #Grabs the professor's name from bing. Need to better leverage the resulting html.
+    # Grabs the professor's name from bing. Need to better leverage the resulting html.
+    # @TODO refactor to shorten function
     try:
         local_part = email.lower().split("@")[0]
     except IndexError as iE:
         print "[ERROR] Bad email: %s" % email
         return None
-    search_word = "professor. " + email + ' ' + school_name
+    search_word = " " + email + ' ' + school_name
     result_list = web_searh(search_word, limit=10)
 
-    #first pass
+    #first pass uses html source
     source_level_extraction_results = []
     for result_index, result in enumerate(result_list):
         if result_index < 4:
-            source_level_extraction_results.append(page_name_extraction(result.url, email))
+            extracted_name = page_name_extraction(result.url, email)
+            if extracted_name != None:
+                source_level_extraction_results.append(extracted_name)
         else:
             break
-        continue
+    try:
+        source_level_extraction_results = sorted(source_level_extraction_results, key=lambda (x,y): y)
+    except TypeError as tE:
+        print "WARN: could not complete full sort due to bad extractions"
 
-    #2nd pass
+    #2nd pass uses title matching
     result_page_tokenization_search_result = ""
     for result_index, result in enumerate(result_list):
         title, link = result.title, result.url
@@ -139,18 +150,45 @@ def name_from_email(email, school_name, first_n=3):
             n_gram += (token + " ")
             if token in local_part:
                 result_page_tokenization_search_result = token.title()
-    print source_level_extraction_results
-    print result_page_tokenization_search_result
+
+    #3rd pass - counts tokenes
+    title_hashes = {}
+    for result_index, result in enumerate(result_list):
+        print result.title
+        for token in [t for t in re.split('[^a-zA-Z]', result.title) if t != '']:
+            token = token.lower()
+            title_hashes[token] = title_hashes.get(token, 0) + 1
+    token_counter_result = sorted(title_hashes.iteritems(), key=lambda (x, y): y, reverse=True)[0:5]
+    print token_counter_result
+
+    if len(source_level_extraction_results) != 0:
+        try:
+            print " ".join(source_level_extraction_results[0][0]) + "************************************"
+            return " ".join(source_level_extraction_results[0][0])
+        except Exception as e:
+            print "[ERR] Failed to extract %s. Printing source_level_extraction_results below" + email
+            print source_level_extraction_results
+    elif result_page_tokenization_search_result:
+        return result_page_tokenization_search_result
+    else:
+        print "Token Counter:"
+        print token_counter_result
+
+    #print result_page_tokenization_search_result
+    #print token_couter_result
     return None
 
 
 #page_name_extraction(page, email)
 
 #name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
-name_from_email("massellol@walshjesuit.org", "Walsh University")
+#name_from_email("negativetwelve@gmail.com", "")
+#name_from_email("massellol@walshjesuit.org", "Walsh University")
+
 #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
+#name_from_email("sattar@bard.edu", "Bard College")
 
-
+name_from_email("swcarter@ncsu.edu", "Thomas University")
 #print page_name_extraction('http://www.gradschool.usciences.edu/faculty/walasek-carl', 'c.walase@usciences.edu')
 
 
