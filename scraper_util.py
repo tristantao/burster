@@ -7,10 +7,10 @@ class PageError(RuntimeError):
 
 def getRawHtml(raw_link):
     #Givne a raw link, queries and returns the raw html
-    print "[STATUS] Scraping {0}".format(raw_link)
     if raw_link.endswith('.pdf'):
         print "[INFO] pdf link, not scraping: %s" % raw_link
     try:
+        print "[STATUS] Scraping {0}".format(raw_link)
         r = requests.get(raw_link, timeout=5)
     except Exception as e:
         print str(e)
