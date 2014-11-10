@@ -82,8 +82,22 @@ def roundrobin(*iterables):
             pending -= 1
             nexts = cycle(islice(nexts, pending))
 
+def score_token(email, token, bias=0.0):
+    # Lower is better
+    name = name.split("@")[0] if "@" in name else name #@TODO check if including the @ makes the search better (or try both)
+    name = sorted(re.split('\.|\_|\-', name), key=lambda c: len(c), reverse=True)[0]
+    return nltk.metrics.edit_distance(name, token.lower()) + bias
+
+def simplify_name(name, email):
+    # Given a name token, will break the name down into modules and return the most releant.
+    # Shouldn't modify the name if it's alreayd correct.
+    # Does this via the scoring system
+    if not name:
+        return None
+    tokenized_names = re.split('[^a-zA-z\s\.]', name)
+
 def page_name_extraction(page, email):
-    #Given a page and an email, retuns a string that is most likely the name of the email
+    #Given a page and an email, retuns a string that is most likely the name of the owner of the email
     #Returns a tuple of (name, score)
     raw_html = getRawHtml(page)
     name = email.split("@")[0] if "@" in email else email #@TODO check if including the @ makes the search better (or try both)
@@ -116,7 +130,7 @@ def page_name_extraction(page, email):
                     continue
                 if len(untokenized.replace(",", "").strip()) != 0 \
                 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element if encoded_element_token.isalpha()]):
-                    tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) + (index / 20.0) for t in tokenized_encoded_element]
+                    tokenized_encoded_element_scores = [score_token(name, t, bias=(index / 20.0)) for t in tokenized_encoded_element]
                     candidates[tuple(tokenized_encoded_element)] = min(candidates.get(tuple(tokenized_encoded_element), sys.maxint), min(tokenized_encoded_element_scores))
                     #print "%s  : %s" % (tuple(tokenized_encoded_element), tokenized_encoded_element_scores)
             except RuntimeError as rE:
