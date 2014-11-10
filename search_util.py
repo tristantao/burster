@@ -36,7 +36,7 @@ def bing_search(keywords, bing_id, first_n=50, throttle=True):
     if throttle:
         time.sleep(random.random())
     try:
-        bing = PyBingSearch(bing_id)
+        bing = PyBingSearch(bing_id, safe=True)
         search_result, next_link = bing.search(keywords, limit=first_n, format='json')
     except pybingsearch.PyBingException as pBE:
         print str(pBE)
@@ -105,11 +105,21 @@ def page_name_extraction(page, email):
 
         for index, search_element in enumerate(roundrobin(element_prev_iterable_token, element_next_iterable_token)):
             try:
-                tokenized_encoded_element = word_tokenize(search_element.encode('utf8'))
-                if len(tokenized_encoded_element) != 0 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element if encoded_element_token.isalpha()]):
-                    tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) + (index / 10.0) for t in tokenized_encoded_element]
+                untokenized = search_element.encode('utf8')
+                tokenized_encoded_element = word_tokenize(untokenized)
+                if len(untokenized) != 0 and \
+                (sum(1.0 for c in untokenized if c.isalpha()) / len(untokenized) < 0.5) and \
+                all(c.isupper() for c in untokenized):
+                    # length 0
+                    # 50%+ symbols
+                    # all cap
+                    continue
+
+                if len(untokenized.replace(",", "").strip()) != 0 \
+                and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element if encoded_element_token.isalpha()]):
+                    tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) + (index / 20.0) for t in tokenized_encoded_element]
                     candidates[tuple(tokenized_encoded_element)] = min(candidates.get(tuple(tokenized_encoded_element), sys.maxint), min(tokenized_encoded_element_scores))
-                    print "%s  : %s" % (tuple(tokenized_encoded_element), tokenized_encoded_element_scores)
+                    #print "%s  : %s" % (tuple(tokenized_encoded_element), tokenized_encoded_element_scores)
             except RuntimeError as rE:
                 #encode sometimes gets into an infinite recursion for some reason.
                 continue
@@ -191,21 +201,24 @@ def name_from_email(email, school_name, first_n=3):
     #print token_couter_result
     return None
 
+if __name__ == "__main__":
+    #page_name_extraction(page, email)
 
-#page_name_extraction(page, email)
+    #name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
+    #name_from_email("negativetwelve@gmail.com", "")
+    #name_from_email("massellol@walshjesuit.org", "Walsh University")
 
-#name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
-#name_from_email("negativetwelve@gmail.com", "")
-#name_from_email("massellol@walshjesuit.org", "Walsh University")
-
-#name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
-#name_from_email("sattar@bard.edu", "Bard College")
-#name_from_email("pmerrill@wingate.edu", "Wingate University")
-name_from_email("nflynn@wtamu.edu", "West Texas A&M University")
-#
-#name_from_email("lane@bard.edu", "Bard College")
-#mhandelm@bard.edu
-#print page_name_extraction('http://www.gradschool.usciences.edu/faculty/walasek-carl', 'c.walase@usciences.edu')
+    #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
+    #name_from_email("sattar@bard.edu", "Bard College")
+    #name_from_email("pmerrill@wingate.edu", "Wingate University")
+    name_from_email("nflynn@wtamu.edu", "West Texas A&M University")
+    #ccuff@westminster.edu
+    #lavori@stanford.edu
+    #  piotr.kokoszka@colostate.edu' NOT found in page 'http://www.stat.colostate.edu/~piotr/'
+    #
+    #name_from_email("lane@bard.edu", "Bard College")
+    #mhandelm@bard.edu
+    #print page_name_extraction('http://www.gradschool.usciences.edu/faculty/walasek-carl', 'c.walase@usciences.edu')
 
 
 
