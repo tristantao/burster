@@ -19,7 +19,7 @@ import keys
 #pdb.set_trace()
 
 if __name__ == "__main__":
-    csv_out = csv.writer(open("data/professors_nov_6.csv", "a"))
+    csv_out = csv.writer(open("data/professors_nov_10.csv", "a"))
     csv_out.writerow(["FIRST NAME", "EMAIL", "UNIVERSITY"])
 
     with open('data/200.csv', 'rb') as f:

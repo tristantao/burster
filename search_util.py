@@ -105,7 +105,7 @@ def page_name_extraction(page, email):
         for index, search_element in enumerate(roundrobin(element_prev_iterable_token, element_next_iterable_token)):
             try:
                 tokenized_encoded_element = word_tokenize(search_element.encode('utf8'))
-                if len(tokenized_encoded_element) != 0 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 2) for encoded_element_token in tokenized_encoded_element]):
+                if len(tokenized_encoded_element) != 0 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element]):
                     tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) + (index / 10.0) for t in tokenized_encoded_element]
                     candidates[tuple(tokenized_encoded_element)] = min(tokenized_encoded_element_scores)
                     print "%s  : %s" % (tuple(tokenized_encoded_element), tokenized_encoded_element_scores)
