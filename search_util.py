@@ -68,7 +68,7 @@ class IterableElementToken:
         if self.root == None:
             raise StopIteration
         else:
-            return self.root
+            return self.root.string if self.root.string != None else ""
 
 def roundrobin(*iterables):
     #Given a series of iterables, it'll iterate via roundrobin for all.
@@ -106,7 +106,7 @@ def page_name_extraction(page, email):
         for index, search_element in enumerate(roundrobin(element_prev_iterable_token, element_next_iterable_token)):
             try:
                 tokenized_encoded_element = word_tokenize(search_element.encode('utf8'))
-                if len(tokenized_encoded_element) != 0 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element]):
+                if len(tokenized_encoded_element) != 0 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element if encoded_element_token.isalpha()]):
                     tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) + (index / 10.0) for t in tokenized_encoded_element]
                     candidates[tuple(tokenized_encoded_element)] = min(candidates.get(tuple(tokenized_encoded_element), sys.maxint), min(tokenized_encoded_element_scores))
                     print "%s  : %s" % (tuple(tokenized_encoded_element), tokenized_encoded_element_scores)
@@ -201,8 +201,11 @@ def name_from_email(email, school_name, first_n=3):
 
 #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
 #name_from_email("sattar@bard.edu", "Bard College")
+name_from_email("pmerrill@wingate.edu", "Wingate University")
 
-name_from_email("lane@bard.edu", "Bard College")
+
+#
+#name_from_email("lane@bard.edu", "Bard College")
 #mhandelm@bard.edu
 #print page_name_extraction('http://www.gradschool.usciences.edu/faculty/walasek-carl', 'c.walase@usciences.edu')
 
