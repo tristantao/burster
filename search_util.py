@@ -107,14 +107,13 @@ def page_name_extraction(page, email):
             try:
                 untokenized = search_element.encode('utf8')
                 tokenized_encoded_element = word_tokenize(untokenized)
-                if len(untokenized) != 0 and \
-                (sum(1.0 for c in untokenized if c.isalpha()) / len(untokenized) < 0.5) and \
+                if len(untokenized) != 0 or
+                (sum(1.0 for c in untokenized if c.isalpha()) / len(untokenized) < 0.5) or \
                 all(c.isupper() for c in untokenized):
                     # length 0
                     # 50%+ symbols
                     # all cap
                     continue
-
                 if len(untokenized.replace(",", "").strip()) != 0 \
                 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element if encoded_element_token.isalpha()]):
                     tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) + (index / 20.0) for t in tokenized_encoded_element]
@@ -211,7 +210,7 @@ if __name__ == "__main__":
     #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
     #name_from_email("sattar@bard.edu", "Bard College")
     #name_from_email("pmerrill@wingate.edu", "Wingate University")
-    name_from_email("nflynn@wtamu.edu", "West Texas A&M University")
+    name_from_email("agalatola@wcupa.edu", "")
     #ccuff@westminster.edu
     #lavori@stanford.edu
     #  piotr.kokoszka@colostate.edu' NOT found in page 'http://www.stat.colostate.edu/~piotr/'
