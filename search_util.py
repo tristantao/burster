@@ -82,19 +82,45 @@ def roundrobin(*iterables):
             pending -= 1
             nexts = cycle(islice(nexts, pending))
 
-def score_token(email, token, bias=0.0):
+class NameScoreBox:
+    #when updating, only keeps the lowest score.
+
+    def __init__(self):
+        self.name_scores = {}
+
+    def update(self, name, score):
+        self.name_scores[name] = min(self.name_scores.get(name, sys.maxint), score)
+
+    def get_score(self, name):
+        return self.name_scores.get(name, sys.maxint)
+
+    def best_name(self):
+        try:
+            return sorted(self.name_scores.iteritems(), key=lambda k: k[1])[0]
+        except IndexError as iE:
+            return None
+
+def score_token(name, token, bias=0.0):
+    # Returns a score for the likeliyhood that the token belongs to the name.
     # Lower is better
-    name = name.split("@")[0] if "@" in name else name #@TODO check if including the @ makes the search better (or try both)
-    name = sorted(re.split('\.|\_|\-', name), key=lambda c: len(c), reverse=True)[0]
     return nltk.metrics.edit_distance(name, token.lower()) + bias
 
-def simplify_name(name, email):
-    # Given a name token, will break the name down into modules and return the most releant.
-    # Shouldn't modify the name if it's alreayd correct.
-    # Does this via the scoring system
+def simplify_name(extracted_name, email):
+    # Given an extracted name, will try to return the relevant component.
+    # Shouldn't modify the name if it's already correct.
+    # Does this via the scoring system.
+    name = email.split("@")[0] if "@" in email else email #@TODO check if including the @ makes the search better (or try both)
+    name = sorted(re.split('\.|\_|\-', name), key=lambda c: len(c), reverse=True)[0]
     if not name:
         return None
-    tokenized_names = re.split('[^a-zA-z\s\.]', name)
+    name_modules = re.split('[^a-zA-z\s\.]', extracted_name)
+    name_module_to_score = NameScoreBox()
+
+    for tokenized_name_parts in name_modules:
+        score = min([score_token(name, token) for token in tokenized_name_parts.split()])
+        name_module_to_score.update(tokenized_name_parts, score)
+
+    return name_module_to_score.best_name()
 
 def page_name_extraction(page, email):
     #Given a page and an email, retuns a string that is most likely the name of the owner of the email
@@ -110,7 +136,8 @@ def page_name_extraction(page, email):
         print str(hPE)
         return None
     name_regex = r'' + re.escape(name)
-    candidates = {}
+    score_box = NameScoreBox()
+    #candidates = {}
     if len(bs_struct(text=re.compile(name_regex))) != 0:
         elem = bs_struct(text=re.compile(name_regex))[0]
         elem =  elem.parent
@@ -121,9 +148,9 @@ def page_name_extraction(page, email):
             try:
                 untokenized = search_element.encode('utf8')
                 tokenized_encoded_element = word_tokenize(untokenized)
-                if len(untokenized) != 0 or
-                (sum(1.0 for c in untokenized if c.isalpha()) / len(untokenized) < 0.5) or \
-                all(c.isupper() for c in untokenized):
+                if len(untokenized) != 0 and \
+                ((sum(1.0 for c in untokenized if c.isalpha()) / len(untokenized) < 0.5) or \
+                all(c.isupper() for c in untokenized)):
                     # length 0
                     # 50%+ symbols
                     # all cap
@@ -131,20 +158,14 @@ def page_name_extraction(page, email):
                 if len(untokenized.replace(",", "").strip()) != 0 \
                 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element if encoded_element_token.isalpha()]):
                     tokenized_encoded_element_scores = [score_token(name, t, bias=(index / 20.0)) for t in tokenized_encoded_element]
-                    candidates[tuple(tokenized_encoded_element)] = min(candidates.get(tuple(tokenized_encoded_element), sys.maxint), min(tokenized_encoded_element_scores))
-                    #print "%s  : %s" % (tuple(tokenized_encoded_element), tokenized_encoded_element_scores)
+                    score_box.update(tuple(tokenized_encoded_element), min(tokenized_encoded_element_scores))
             except RuntimeError as rE:
                 #encode sometimes gets into an infinite recursion for some reason.
-                continue
                 print str(rE)
-                return None
+                continue
     else:
         print "[INFO] Email Name '%s' NOT found in page '%s'. Continuing." % (email, page)
-    try:
-        extracted_name_score_token = sorted(candidates.iteritems(), key=lambda k: k[1])[0]
-        return extracted_name_score_token
-    except IndexError as iE:
-        return None
+    return score_box.best_name()
 
 def name_from_email(email, school_name, first_n=3):
     # Grabs the professor's name from bing. Need to better leverage the resulting html.
@@ -224,7 +245,8 @@ if __name__ == "__main__":
     #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
     #name_from_email("sattar@bard.edu", "Bard College")
     #name_from_email("pmerrill@wingate.edu", "Wingate University")
-    name_from_email("agalatola@wcupa.edu", "")
+    n = name_from_email("agalatola@wcupa.edu", "")
+    print simplify_name(n, "agalatola@wcupa.edu")
     #ccuff@westminster.edu
     #lavori@stanford.edu
     #  piotr.kokoszka@colostate.edu' NOT found in page 'http://www.stat.colostate.edu/~piotr/'
