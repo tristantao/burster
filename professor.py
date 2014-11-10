@@ -19,8 +19,16 @@ class Professor(object):
         return True
 
     def cleaned_name(self):
+        titles =["Dr.", "Mr.", "Ms.", "Mrs.", "Professor", "Professor.", "Prof", "Prof.", ","]
         if self.name:
-            pass
+            #output_name = re.sub(' +',' ', self.name)
+            output_name = " ".join(self.name.split())
+            for title in titles:
+                output_name = output_name.replace(title, "")
+            output_name = "".join([c for c in output_name if (c.isalpha() or c == " " or c == ".")])
+            return "Dr. " + output_name.strip()
+        else:
+            return ""
 
     @staticmethod
     def unfamilar_domain_failure(sub_domain):
@@ -56,7 +64,8 @@ class Professor(object):
     @staticmethod
     def bad_name_failure(name):
          name_words_contains =  ['admission', 'spam', 'info', 'faculty', 'campus', 'webmaster', 'career', 'employment',
-         'service', 'online', 'payroll', 'grads', 'news', 'publication', 'help', 'student', 'advisor', 'today', 'foundation']
+         'service', 'online', 'payroll', 'grads', 'news', 'publication', 'help', 'student', 'advisor', 'today', 'foundation',
+         'search']
          name_words_exact = ['news', 'foo', 'you']
          name = name.split("@")[0] if "@" in name else name
          for taboo_contains in name_words_contains:
@@ -65,7 +74,8 @@ class Professor(object):
          return False if name not in name_words_exact else True
 
 if __name__ == "__main__":
-    test_professor = Professor('name', 'student@legit.com', 'university_id', 'department', 'hr')
-    test_professor = Professor('name', 'student@legit.com', 'university_id', 'department', 'hr')
-    print test_professor.should_contact()
+    test_professor1 = Professor('name', 'student@legit.com', 'university_id', 'department')
+    print test_professor1.should_contact()
+    test_professor2 = Professor('Dr. Tao', 'student@legit.com', 'university_id', 'department')
+    print test_professor2.cleaned_name()
 
