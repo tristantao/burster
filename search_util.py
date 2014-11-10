@@ -4,8 +4,13 @@ from bs4 import BeautifulSoup, SoupStrainer
 import requests
 from datetime import date
 import re
+from itertools import islice, cycle
+from nltk.tokenize import word_tokenize
+import nltk
+import HTMLParser
 
 from scraper_util import *
+
 
 from pygoogle import pygoogle
 from pybingsearch import PyBingSearch
@@ -17,6 +22,7 @@ import pdb
 
 def google_search(keywords, first_n):
     #given a keywords, returns the link to first_n results.
+    #@Deprecated by a long shot
     cleaned_keywords = re.sub( '\s+', ' ', keywords)
     required_pages = math.ceil(first_n / 8.0)
     g = pygoogle(cleaned_keywords)
@@ -37,34 +43,159 @@ def bing_search(keywords, bing_id, first_n=50, throttle=True):
         sys.exit(1)
     return search_result, next_link
 
-def name_from_email(email, school_name, bing_id, first_n=3):
-    #Grabs the professor's name from bing. Need to better leverage the resulting html.
+def web_searh(search_word, limit=10):
+    #Retrusna a list of Result objects
+    #the actual search function caled by other functions.
+    bing = PyBingSearch(keys.bing_id)
+    result_list, next_page = bing.search(search_word, limit, format='json') #email + " " + school
+    return result_list
+
+class IterableElementToken:
+    def __init__(self, starting_node, direction):
+        # starting_node is a beautiful soup page element.
+        # direction has to be 'next' or 'previous'
+        self.root = starting_node
+        if direction == "previous" or direction == "next":
+            self.direction = direction
+        else:
+            raise Exception("Bad Direction")
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        self.root = self.root.previous_element if self.direction == "previous" else self.root.next_element
+        if self.root == None:
+            raise StopIteration
+        else:
+            return self.root
+
+def roundrobin(*iterables):
+    #Given a series of iterables, it'll iterate via roundrobin for all.
+    pending = len(iterables)
+    nexts = cycle(iter(it).next for it in iterables)
+    while pending:
+        try:
+            for next in nexts:
+                yield next()
+        except StopIteration:
+            pending -= 1
+            nexts = cycle(islice(nexts, pending))
+
+def page_name_extraction(page, email):
+    #Given a page and an email, retuns a string that is most likely the name of the email
+    raw_html = getRawHtml(page)
+    name = email.split("@")[0] if "@" in email else email #@TODO check if including the @ makes the search better (or try both)
+    name = sorted(re.split('\.|\_|\-', name), key=lambda c: len(c), reverse=True)[0]
+    #@TODO take care when it is [at] or [dot].
+
+    try:
+        bs_struct = BeautifulSoup(raw_html, "html.parser")
+    except HTMLParser.HTMLParseError as hPE:
+        print str(hPE)
+        return None
+    name_regex = r'' + re.escape(name)
+    candidates = {}
+    for elem in bs_struct(text=re.compile(name_regex)):
+        elem =  elem.parent
+        element_prev_iterable_token = IterableElementToken(elem, "previous")
+        element_next_iterable_token = IterableElementToken(elem, "next")
+
+        for index, search_element in enumerate(roundrobin(element_prev_iterable_token, element_next_iterable_token)):
+            tokenized_encoded_element = word_tokenize(search_element.encode('utf8'))
+            if len(tokenized_encoded_element) != 0 and all([encoded_element_token[0].isupper() for encoded_element_token in tokenized_encoded_element]):
+                tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) for t in tokenized_encoded_element]
+                candidates[tuple(tokenized_encoded_element)] = min(tokenized_encoded_element_scores)
+    try:
+        extracted_name_token = sorted(candidates.iteritems(), key=lambda k: k[1])[0]
+        return extracted_name_token
+    except IndexError as iE:
+        return None
+
+def name_from_email(email, school_name, first_n=3):
+    # Grabs the professor's name from bing. Need to better leverage the resulting html.
+    # @TODO refactor to shorten function
     try:
         local_part = email.lower().split("@")[0]
     except IndexError as iE:
-        print email
+        print "[ERROR] Bad email: %s" % email
         return None
-    search_word = "professor. " + email + ' ' + school_name
-    bing = PyBingSearch(bing_id)
-    ressult_list, next_page = bing.search(search_word, limit=50, format='json') #email + " " + school
-    for result in ressult_list:
+    search_word = " " + email + ' ' + school_name
+    result_list = web_searh(search_word, limit=10)
+
+    #first pass uses html source
+    source_level_extraction_results = []
+    for result_index, result in enumerate(result_list):
+        if result_index < 4:
+            extracted_name = page_name_extraction(result.url, email)
+            if extracted_name != None:
+                source_level_extraction_results.append(extracted_name)
+        else:
+            break
+    try:
+        source_level_extraction_results = sorted(source_level_extraction_results, key=lambda (x,y): y)
+    except TypeError as tE:
+        print "WARN: could not complete full sort due to bad extractions"
+
+    #2nd pass uses title matching
+    result_page_tokenization_search_result = ""
+    for result_index, result in enumerate(result_list):
         title, link = result.title, result.url
         #tokenized_names = title.lower().split()
         tokenized_names = re.findall(r"\w+", title.lower())
         n_gram = ""
         for token in tokenized_names:
-            if len(token) < 2:
+            if len(token) < 3:
                 continue
             n_gram += (token + " ")
             if token in local_part:
-                return token.title()
+                result_page_tokenization_search_result = token.title()
+
+    #3rd pass - counts tokenes
+    title_hashes = {}
+    for result_index, result in enumerate(result_list):
+        print result.title
+        for token in [t for t in re.split('[^a-zA-Z]', result.title) if t != '']:
+            token = token.lower()
+            title_hashes[token] = title_hashes.get(token, 0) + 1
+    token_counter_result = sorted(title_hashes.iteritems(), key=lambda (x, y): y, reverse=True)[0:5]
+    print token_counter_result
+
+    if len(source_level_extraction_results) != 0:
+        try:
+            print " ".join(source_level_extraction_results[0][0]) + "************************************"
+            return " ".join(source_level_extraction_results[0][0])
+        except Exception as e:
+            print "[ERR] Failed to extract %s. Printing source_level_extraction_results below" + email
+            print source_level_extraction_results
+    elif result_page_tokenization_search_result:
+        return result_page_tokenization_search_result
+    else:
+        print "Token Counter:"
+        print token_counter_result
+
+    #print result_page_tokenization_search_result
+    #print token_couter_result
     return None
 
 
-#name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
-print name_from_email("rmclaughlin@walsh.edu", "Walsh University", bing_id=keys.bing_id)
+#page_name_extraction(page, email)
 
-#name_from_email("dcline@stat.tamu.edu", "")
+#name_from_email("anirbanb@stat.tamu.edu", "Texas A&M University", bing_id=keys.bing_id)
+#name_from_email("negativetwelve@gmail.com", "")
+#name_from_email("massellol@walshjesuit.org", "Walsh University")
+
+#name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
+#name_from_email("sattar@bard.edu", "Bard College")
+
+name_from_email("swcarter@ncsu.edu", "Thomas University")
+#print page_name_extraction('http://www.gradschool.usciences.edu/faculty/walasek-carl', 'c.walase@usciences.edu')
+
+
+
+
+
+
 
 
 

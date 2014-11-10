@@ -12,16 +12,14 @@ import keys
 #print result_list[0].url
 #print result_list[0].title
 
-
 #page = Page("https://www.stat.tamu.edu/people/", "texas")
 #page.crawl_root(depth=1)
 
 #print page.emails
 #pdb.set_trace()
 
-
 if __name__ == "__main__":
-    csv_out = csv.writer(open("data/professors.csv", "a"))
+    csv_out = csv.writer(open("data/professors_nov_6.csv", "a"))
     csv_out.writerow(["FIRST NAME", "EMAIL", "UNIVERSITY"])
 
     with open('data/200.csv', 'rb') as f:
@@ -33,11 +31,13 @@ if __name__ == "__main__":
             target_professors = db_util.extract_unemailed_professors_from_university(university_name, 2)
             print len(target_professors)
             for professor in target_professors:
-                                             #name_from_email(email,          school,          bing_id, first_n=3):
-                professor_name = search_util.name_from_email(professor.email, university_name, keys.bing_id)
+                if not professor.should_contact:
+                    print "[INFO] Skipping Professor: %s" % professor.email
+                    continue
+                professor_name = search_util.name_from_email(professor.email, university_name)
                 professor.name = professor_name
                 db_util.update_name(professor)
-                csv_out.writerow([professor_name, professor.email, university_name])
+                csv_out.writerow([professor_name, professor.email, university_name, professor.should_contact()])
             db_util.add_email_transaction(target_professors, "200.csv")
 
             #extract_unemailed_professors_from_university
