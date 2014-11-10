@@ -187,7 +187,6 @@ def name_from_email(email, school_name, first_n=3):
     else:
         print "Token Counter:"
         print token_counter_result
-
     #print result_page_tokenization_search_result
     #print token_couter_result
     return None
@@ -201,9 +200,8 @@ def name_from_email(email, school_name, first_n=3):
 
 #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
 #name_from_email("sattar@bard.edu", "Bard College")
-name_from_email("pmerrill@wingate.edu", "Wingate University")
-
-
+#name_from_email("pmerrill@wingate.edu", "Wingate University")
+name_from_email("nflynn@wtamu.edu", "West Texas A&M University")
 #
 #name_from_email("lane@bard.edu", "Bard College")
 #mhandelm@bard.edu
