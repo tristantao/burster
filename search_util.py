@@ -84,6 +84,7 @@ def roundrobin(*iterables):
 
 def page_name_extraction(page, email):
     #Given a page and an email, retuns a string that is most likely the name of the email
+    #Returns a tuple of (name, score)
     raw_html = getRawHtml(page)
     name = email.split("@")[0] if "@" in email else email #@TODO check if including the @ makes the search better (or try both)
     name = sorted(re.split('\.|\_|\-', name), key=lambda c: len(c), reverse=True)[0]
@@ -107,16 +108,18 @@ def page_name_extraction(page, email):
                 tokenized_encoded_element = word_tokenize(search_element.encode('utf8'))
                 if len(tokenized_encoded_element) != 0 and all([(encoded_element_token[0].isupper() and len(encoded_element_token) > 0) for encoded_element_token in tokenized_encoded_element]):
                     tokenized_encoded_element_scores = [nltk.metrics.edit_distance(name, t.lower()) + (index / 10.0) for t in tokenized_encoded_element]
-                    candidates[tuple(tokenized_encoded_element)] = min(tokenized_encoded_element_scores)
+                    candidates[tuple(tokenized_encoded_element)] = min(candidates.get(tuple(tokenized_encoded_element), sys.maxint), min(tokenized_encoded_element_scores))
                     print "%s  : %s" % (tuple(tokenized_encoded_element), tokenized_encoded_element_scores)
             except RuntimeError as rE:
                 #encode sometimes gets into an infinite recursion for some reason.
                 continue
                 print str(rE)
-                return ''
+                return None
+    else:
+        print "[INFO] Email Name '%s' NOT found in page '%s'. Continuing." % (email, page)
     try:
-        extracted_name_token = sorted(candidates.iteritems(), key=lambda k: k[1])[0]
-        return extracted_name_token
+        extracted_name_score_token = sorted(candidates.iteritems(), key=lambda k: k[1])[0]
+        return extracted_name_score_token
     except IndexError as iE:
         return None
 
@@ -135,10 +138,10 @@ def name_from_email(email, school_name, first_n=3):
     #first pass uses html source
     source_level_extraction_results = []
     for result_index, result in enumerate(result_list):
-        if result_index < 4:
-            extracted_name = page_name_extraction(result.url, email)
-            if extracted_name != None:
-                source_level_extraction_results.append(extracted_name)
+        if result_index <= 3:
+            extracted_name_score_token = page_name_extraction(result.url, email)
+            if extracted_name_score_token:
+                source_level_extraction_results.append(extracted_name_score_token)
         else:
             break
     try:
@@ -173,7 +176,7 @@ def name_from_email(email, school_name, first_n=3):
 
     if len(source_level_extraction_results) != 0:
         try:
-            print "************************************ SRC level extrated for %s:" % email
+            print '*' * 100 + "SRC level extrated for %s:" % email
             print " ".join(source_level_extraction_results[0][0])
             return " ".join(source_level_extraction_results[0][0])
         except Exception as e:
@@ -199,7 +202,8 @@ def name_from_email(email, school_name, first_n=3):
 #name_from_email("dcline@stat.tamu.edu", "", bing_id=keys.bing_id)
 #name_from_email("sattar@bard.edu", "Bard College")
 
-name_from_email("skiff@bard.edu", "Bard College")
+name_from_email("lane@bard.edu", "Bard College")
+#mhandelm@bard.edu
 #print page_name_extraction('http://www.gradschool.usciences.edu/faculty/walasek-carl', 'c.walase@usciences.edu')
 
 
