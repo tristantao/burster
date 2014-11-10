@@ -52,7 +52,7 @@ class Professor(object):
     @staticmethod
     def bad_name_failure(name):
          name_words_contains =  ['admission', 'spam', 'info', 'faculty', 'campus', 'webmaster', 'career', 'employment',
-         'service', 'online', 'payroll', 'grads', 'news', 'publication', 'help', 'student', 'advisor', 'today']
+         'service', 'online', 'payroll', 'grads', 'news', 'publication', 'help', 'student', 'advisor', 'today', 'foundation']
          name_words_exact = ['news', 'foo']
          name = name.split("@")[0] if "@" in name else name
          for taboo_contains in name_words_contains:
