@@ -34,11 +34,14 @@ if __name__ == "__main__":
                 if not professor.should_contact:
                     print "[INFO] Skipping Professor: %s" % professor.email
                     continue
-                professor_name = search_util.name_from_email(professor.email, university_name)
-                professor_name = search_util.simplify_name(professor_name, professor.email)
-                professor.name = professor_name
-                db_util.update_name(professor)
-                csv_out.writerow([professor_name, professor.email, university_name, professor.should_contact()])
+                try:
+                    professor_name = search_util.name_from_email(professor.email, university_name)
+                    professor_name = search_util.simplify_name(professor_name, professor.email)
+                    professor.name = professor_name
+                    db_util.update_name(professor)
+                    csv_out.writerow([professor_name, professor.email, university_name, professor.should_contact()])
+                except Exception as e:
+                    print str(e)
             db_util.add_email_transaction(target_professors, "1000.csv")
 
             #extract_unemailed_professors_from_university

@@ -242,7 +242,7 @@ def name_from_email(email, school_name, first_n=3):
     #3rd pass - counts tokenes
     title_hashes = {}
     for result_index, result in enumerate(result_list):
-        print result.title
+        print result.title.encode('utf8')
         for token in [t for t in re.split('[^a-zA-Z]', result.title) if t != '']:
             token = token.lower()
             title_hashes[token] = title_hashes.get(token, 0) + 1
