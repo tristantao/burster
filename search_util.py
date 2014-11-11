@@ -135,8 +135,12 @@ def simplify_name(extracted_name, email):
     name_module_to_score = NameScoreBox()
 
     for tokenized_name_parts in name_modules:
-        score = min([score_token(name, token) for token in tokenized_name_parts.split()])
-        name_module_to_score.update(tokenized_name_parts, score)
+        try:
+            score = min([score_token(name, token) for token in tokenized_name_parts.split()])
+            name_module_to_score.update(tokenized_name_parts, score)
+        except ValueError as vE:
+            print str(vE)
+            continue
 
     return name_module_to_score.best_name()
 
