@@ -22,13 +22,14 @@ if __name__ == "__main__":
     csv_out = csv.writer(open("data/professors_nov_10.csv", "a"))
     csv_out.writerow(["FIRST NAME", "EMAIL", "UNIVERSITY"])
 
+
     with open('data/1000.csv', 'rb') as f:
         reader = csv.reader(f) #no header here
         for row in reader:
             university_id, university_name = row[0], row[1]
             print university_id
             print university_name
-            target_professors = db_util.extract_unemailed_professors_from_university(university_name, 2)
+            target_professors = db_util.extract_unemailed_professors_from_university(university_name, 20)
             print len(target_professors)
             for professor in target_professors:
                 if not professor.should_contact:
