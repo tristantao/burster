@@ -35,6 +35,7 @@ if __name__ == "__main__":
                     print "[INFO] Skipping Professor: %s" % professor.email
                     continue
                 professor_name = search_util.name_from_email(professor.email, university_name)
+                professor_name = search_util.simplify_name(professor_name, professor.email)
                 professor.name = professor_name
                 db_util.update_name(professor)
                 csv_out.writerow([professor_name, professor.email, university_name, professor.should_contact()])
