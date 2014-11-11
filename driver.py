@@ -22,7 +22,7 @@ if __name__ == "__main__":
     csv_out = csv.writer(open("data/professors_nov_10.csv", "a"))
     csv_out.writerow(["FIRST NAME", "EMAIL", "UNIVERSITY"])
 
-    with open('data/200.csv', 'rb') as f:
+    with open('data/1000.csv', 'rb') as f:
         reader = csv.reader(f) #no header here
         for row in reader:
             university_id, university_name = row[0], row[1]
@@ -39,7 +39,7 @@ if __name__ == "__main__":
                 professor.name = professor_name
                 db_util.update_name(professor)
                 csv_out.writerow([professor_name, professor.email, university_name, professor.should_contact()])
-            db_util.add_email_transaction(target_professors, "200.csv")
+            db_util.add_email_transaction(target_professors, "1000.csv")
 
             #extract_unemailed_professors_from_university
 

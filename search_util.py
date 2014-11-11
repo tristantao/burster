@@ -130,7 +130,17 @@ def simplify_name(extracted_name, email):
         return None
 
     #re.split(u'[^a-zA-z\s\.\'\ñ\á\é\í\ó\ú\ä\ë\ï\ö\ü]'.encode('utf-8'), extracted_name, re.UNICODE)
-    name_modules = [unicode(module, 'utf-8') for module in re.split('[^a-zñáéíóúäëïöüA-ZÁÉÍÓÚÑ\s\.\']', extracted_name, re.UNICODE)]
+    try:
+        name_modules = [unicode(module, 'utf-8') for module in re.split('[^a-zñáéíóúäëïöüA-ZÁÉÍÓÚÑ\s\.\']', extracted_name, re.UNICODE)]
+    except UnicodeDecodeError as uDE:
+        print "name: %s" % extracted_name
+        print str(uDE)
+        return extracted_name
+    except TypeError as tE:
+        print "name: %s" % extracted_name
+        print str(tE)
+        return extracted_name
+
 
     name_module_to_score = NameScoreBox()
 
