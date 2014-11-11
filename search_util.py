@@ -130,7 +130,17 @@ def simplify_name(extracted_name, email):
         return None
 
     #re.split(u'[^a-zA-z\s\.\'\ñ\á\é\í\ó\ú\ä\ë\ï\ö\ü]'.encode('utf-8'), extracted_name, re.UNICODE)
-    name_modules = [unicode(module, 'utf-8') for module in re.split('[^a-zñáéíóúäëïöüA-ZÁÉÍÓÚÑ\s\.\']', extracted_name, re.UNICODE)]
+    try:
+        name_modules = [unicode(module, 'utf-8') for module in re.split('[^a-zñáéíóúäëïöüA-ZÁÉÍÓÚÑ\s\.\']', extracted_name, re.UNICODE)]
+    except UnicodeDecodeError as uDE:
+        print "name: %s" % extracted_name
+        print str(uDE)
+        return extracted_name
+    except TypeError as tE:
+        print "name: %s" % extracted_name
+        print str(tE)
+        return extracted_name
+
 
     name_module_to_score = NameScoreBox()
 
@@ -232,7 +242,7 @@ def name_from_email(email, school_name, first_n=3):
     #3rd pass - counts tokenes
     title_hashes = {}
     for result_index, result in enumerate(result_list):
-        print result.title
+        print result.title.encode('utf8')
         for token in [t for t in re.split('[^a-zA-Z]', result.title) if t != '']:
             token = token.lower()
             title_hashes[token] = title_hashes.get(token, 0) + 1
