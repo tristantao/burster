@@ -19,7 +19,7 @@ import keys
 #pdb.set_trace()
 
 if __name__ == "__main__":
-    csv_out = csv.writer(open("data/professors_nov_6.csv", "a"))
+    csv_out = csv.writer(open("data/professors_nov_10.csv", "a"))
     csv_out.writerow(["FIRST NAME", "EMAIL", "UNIVERSITY"])
 
     with open('data/200.csv', 'rb') as f:
@@ -35,6 +35,7 @@ if __name__ == "__main__":
                     print "[INFO] Skipping Professor: %s" % professor.email
                     continue
                 professor_name = search_util.name_from_email(professor.email, university_name)
+                professor_name = search_util.simplify_name(professor_name, professor.email)
                 professor.name = professor_name
                 db_util.update_name(professor)
                 csv_out.writerow([professor_name, professor.email, university_name, professor.should_contact()])
