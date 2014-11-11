@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import sys
 import time, csv, optparse, random
 from bs4 import BeautifulSoup, SoupStrainer
@@ -126,8 +128,10 @@ def simplify_name(extracted_name, email):
     name = sorted(re.split('\.|\_|\-', name), key=lambda c: len(c), reverse=True)[0]
     if not name:
         return None
-    name_modules = re.split('[^a-zA-z\s\.]', extracted_name)
-    print name_modules
+
+    #re.split(u'[^a-zA-z\s\.\'\ñ\á\é\í\ó\ú\ä\ë\ï\ö\ü]'.encode('utf-8'), extracted_name, re.UNICODE)
+    name_modules = [unicode(module, 'utf-8') for module in re.split('[^a-zñáéíóúäëïöüA-ZÁÉÍÓÚÑ\s\.\']', extracted_name, re.UNICODE)]
+
     name_module_to_score = NameScoreBox()
 
     for tokenized_name_parts in name_modules:
@@ -259,8 +263,10 @@ if __name__ == "__main__":
     #name_from_email("sattar@bard.edu", "Bard College")
     #name_from_email("pmerrill@wingate.edu", "Wingate University")
     n = name_from_email("agalatola@wcupa.edu", "")
-    print n
+    #print n
     print simplify_name(n, "agalatola@wcupa.edu")
+    #n =  name_from_email("szekely@mailbox.sc.edu", "")
+    #print simplify_name(n, "szekely@mailbox.sc.edu")
     #ccuff@westminster.edu
     #lavori@stanford.edu
     #  piotr.kokoszka@colostate.edu' NOT found in page 'http://www.stat.colostate.edu/~piotr/'
