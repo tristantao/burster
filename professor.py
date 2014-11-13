@@ -65,8 +65,8 @@ class Professor(object):
     def bad_name_failure(name):
          name_words_contains =  ['admission', 'spam', 'info', 'faculty', 'campus', 'webmaster', 'career', 'employment',
          'service', 'online', 'payroll', 'grads', 'news', 'publication', 'help', 'student', 'advisor', 'today', 'foundation',
-         'search', 'physics', 'stats', 'math', 'german']
-         name_words_exact = ['news', 'foo', 'you', 'phys', 'theatre', 'theater']
+         'search', 'physics', 'stats', 'math', 'german', 'name', 'phd', 'associate']
+         name_words_exact = ['news', 'foo', 'you', 'phys', 'theatre', 'theater', 'hr', "%"]
          name = name.split("@")[0] if "@" in name else name
          for taboo_contains in name_words_contains:
              if taboo_contains in name:
@@ -78,4 +78,6 @@ if __name__ == "__main__":
     print test_professor1.should_contact()
     test_professor2 = Professor('Dr. Tao', 'student@legit.com', 'university_id', 'department')
     print test_professor2.cleaned_name()
+    test_professor3 = Professor('Dr. Tao', 'lam@humber.ca', 'university_id', 'department')
+    print test_professor3.should_contact()
 
