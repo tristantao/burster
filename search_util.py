@@ -15,7 +15,7 @@ from scraper_util import *
 
 
 from pygoogle import pygoogle
-from pybingsearch import PyBingSearch
+from py_bing_search import PyBingSearch
 
 import keys
 
@@ -155,7 +155,7 @@ def simplify_name(extracted_name, email):
     return name_module_to_score.best_name()
 
 def page_name_extraction(page, email):
-    #Given a page and an email, retuns a string that is most likely the name of the owner of the email
+    #Given a page and an email, returns a string that is most likely the name of the owner of the email
     #Returns a tuple of (name, score)
     raw_html = getRawHtml(page)
     name = email.split("@")[0] if "@" in email else email #@TODO check if including the @ makes the search better (or try both)
@@ -239,7 +239,7 @@ def name_from_email(email, school_name, first_n=3):
             if token in local_part:
                 result_page_tokenization_search_result = token.title()
 
-    #3rd pass - counts tokenes
+    #3rd pass - counts tokens
     title_hashes = {}
     for result_index, result in enumerate(result_list):
         print result.title.encode('utf8')
